@@ -1,7 +1,9 @@
+package com.waughrn2.ca4006.assignement1;
+
 /**
  * Created by iNfecteD on 21/03/2017.
  */
-public class Teacher {
+public class Teacher{
     private Constants.CAR_STATE carState;
     private int teacherId;
 
@@ -33,5 +35,13 @@ public class Teacher {
 
     public void leaveParking(){
         setCarState(Constants.CAR_STATE.NOT_PARKED);
+    }
+
+    public void run(){
+        if (carState == Constants.CAR_STATE.NOT_PARKED){
+            setCarState(Constants.CAR_STATE.PARKED);
+        } else {
+            setCarState(Constants.CAR_STATE.NOT_PARKED);
+        }
     }
 }

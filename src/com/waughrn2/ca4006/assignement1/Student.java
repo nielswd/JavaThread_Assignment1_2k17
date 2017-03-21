@@ -1,10 +1,12 @@
+package com.waughrn2.ca4006.assignement1;
+
 /**
  * Created by iNfecteD on 21/03/2017.
  */
 
 
-public class Student {
-    private Constants.CAR_STATE carState = Constants.CAR_STATE.NOT_PARKED;
+public class Student{
+    private Constants.CAR_STATE carState;
     private int studentId;
 
 
@@ -36,4 +38,5 @@ public class Student {
     public void leaveParking(){
         setCarState(Constants.CAR_STATE.NOT_PARKED);
     }
+
 }
