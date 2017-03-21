@@ -30,4 +30,11 @@ public class Constants {
         PARKED,
         NOT_PARKED
     }
+
+    public enum TYPE_OF_CAR {
+        STUDENT,
+        TEACHER
+    }
+
+    public static final double PRIORITY = 0.25; // Near 0, priorities Students, near 1, priorities Teachers.
 }
