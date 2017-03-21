@@ -32,11 +32,6 @@ public class People extends Thread {
         this.carState = carState;
     }
 
-    public void run(){
-        if (carState == Constants.CAR_STATE.NOT_PARKED){
-            //try_to_park();
-        } else {
-            //try_to_leave();
-        }
-    }
 }
+
+
