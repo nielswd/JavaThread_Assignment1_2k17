@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class BarbershopTest {
     private final int n = 2000;
-    private final int c = 1;
+    private final int c = 5;
     private static final int m = 1000;
     private final Semaphore mutex = new Semaphore(1);
     private final Semaphore mutex2 = new Semaphore(1);
@@ -85,11 +85,11 @@ public class BarbershopTest {
             loadingArea[next(id)].release();
             _run();
 
-            unloadingArea[id].acquireUninterruptibly();
-            unboard();
-            unboardQueue.release(c);
-            allAshore.acquireUninterruptibly();
-            unloadingArea[next(id)].release();
+//            unloadingArea[id].acquireUninterruptibly();
+//            unboard();
+//            unboardQueue.release(c);
+//            allAshore.acquireUninterruptibly();
+//            unloadingArea[next(id)].release();
         }
 
         private void unboard() {
@@ -125,18 +125,22 @@ public class BarbershopTest {
 
             boardQueue.acquireUninterruptibly();
             board();
-
-            unboardQueue.acquireUninterruptibly();
-            unboard();
-
-            mutex2.acquireUninterruptibly();
-            ++unboarders;
-            if( unboarders == c ){
-                allAshore.release();
-                unboarders = 0;
-            }
-            mutex2.release();
-            latch.countDown();
+//            try {
+//                Thread.sleep(1000);
+//            unboardQueue.acquireUninterruptibly();
+//            unboard();
+//
+//            mutex2.acquireUninterruptibly();
+//            ++unboarders;
+//            if( unboarders == c ){
+//                allAshore.release();
+//                unboarders = 0;
+//            }
+//            mutex2.release();
+//            latch.countDown();
+//            }catch (InterruptedException e) {
+//            System.out.println("[" + Thread.currentThread().getName() +  "] je m'arrête") ;
+//        }
         }
 
         private void unboard() {
@@ -144,7 +148,7 @@ public class BarbershopTest {
         }
 
         private void board() {
-            System.out.println("Board " + id);
+            System.out.println("Board " + boarders);
         }
 
     }
