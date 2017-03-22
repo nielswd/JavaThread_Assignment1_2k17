@@ -28,9 +28,9 @@ public class MainProg {
     /**
      * Queues for entrances. Fairness set to true, we want a real FIFO
      */
-    private ArrayBlockingQueue entrance1 = new ArrayBlockingQueue(400, true);
-    private ArrayBlockingQueue entrance2 = new ArrayBlockingQueue(300, true);
-    private ArrayBlockingQueue entrance3 = new ArrayBlockingQueue(300, true);
+    private ArrayBlockingQueue entrance1 = new ArrayBlockingQueue(400, IS_FAIR);
+    private ArrayBlockingQueue entrance2 = new ArrayBlockingQueue(300, IS_FAIR);
+    private ArrayBlockingQueue entrance3 = new ArrayBlockingQueue(300, IS_FAIR);
 
     /**
      * Queues for exits. Fairness set to true, we want a real FIFO
@@ -96,8 +96,9 @@ public class MainProg {
     private void initTeachers() {
         for(int i = 0;i < NUMBER_TEACHER;i++){
             Random rn = new Random();
-           int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
-            Callable<Integer> teacherCar = new CarIdentity("teacher", randomFactorProblem, listEntrances, listExits);
+           int randomFactorProblem =  rn.nextInt(10) + 1;
+           int durationStay = rn.nextInt(100) + 1;
+            Callable<Integer> teacherCar = new CarIdentity("teacher", randomFactorProblem, durationStay, listEntrances, listExits);
             listCars.add(teacherCar);
         }
     }
@@ -106,7 +107,8 @@ public class MainProg {
         for(int i = 0;i < NUMBER_STUDENT;i++){
             Random rn = new Random();
             int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
-            Callable<Integer> studentCar = new CarIdentity("student", randomFactorProblem, listEntrances, listExits);
+            int durationStay = rn.nextInt(100) + 1;
+            Callable<Integer> studentCar = new CarIdentity("student", randomFactorProblem, durationStay, listEntrances, listExits);
             listCars.add(studentCar);
         }
     }
