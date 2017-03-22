@@ -1,4 +1,4 @@
-package com.waughrn2.ca4006;
+package com.waughrn2.ca4006.NextUpdate;
 
 import java.util.Date;
 
