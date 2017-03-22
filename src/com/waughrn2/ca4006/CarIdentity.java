@@ -95,10 +95,11 @@ public class CarIdentity implements Callable<Integer> {
                     System.out.println("\n");
                     return 0;
                 } else { //Car timed out and is going to next entrance to try to get a spot
-                    if (a <= 3) {
+                    if (a <= 2) {
                         System.out.println("I'm mad about waiting, i'm moving to next queue");
                         a++;
-                    } else {
+                    } else { //Problem : it never come here? Why? Threads are exiting before? ExecutorService shutdown before they could possibly say something?
+                        System.out.println("Pffff, this university sucks. I'm going to UCD");
                         return 1;
                     }
                 }
