@@ -95,8 +95,12 @@ public class CarIdentity implements Callable<Integer> {
                     System.out.println("\n");
                     return 0;
                 } else { //Car timed out and is going to next entrance to try to get a spot
-                    System.out.println("I'm mad about waiting, i'm moving to next queue");
-                    a++;
+                    if (a <= 3) {
+                        System.out.println("I'm mad about waiting, i'm moving to next queue");
+                        a++;
+                    } else {
+                        return 1;
+                    }
                 }
             }
             catch (InterruptedException e)

@@ -72,7 +72,7 @@ public class MainProg {
     /**
      * Initialize all arrays and datas then launch the simulation
      */
-    public void setup(){
+    private void setup(){
         initEntrancesAndExitQueues();
         initExecutor();
         initCars();
@@ -120,7 +120,7 @@ public class MainProg {
     }
 
 
-    public void initEntrancesAndExitQueues(){
+    private void initEntrancesAndExitQueues(){
         listEntrances.add(entrance1);
         listEntrances.add(entrance2);
         listEntrances.add(entrance3);
@@ -137,32 +137,23 @@ public class MainProg {
      * @param executor ExecutorService empty
      * @param listCars List of callable containing the caridentity objects, shuffled.
      */
-    public static void launchSimulation(final ExecutorService executor, List<Callable<Integer>> listCars){
+    private static void launchSimulation(final ExecutorService executor, List<Callable<Integer>> listCars){
 
-        //Le service de terminaison
-        CompletionService<Integer> completionService = new ExecutorCompletionService<Integer>(executor);
+        CompletionService<Integer> completionService = new ExecutorCompletionService<>(executor);
 
-        //une liste de Future pour récupérer les résultats
-        List<Future<Integer>> futures = new ArrayList<Future<Integer>>();
+        List<Future<Integer>> listCarState = new ArrayList<>();
 
         Integer res = null;
         try {
-            //On soumet toutes les tâches à l'executor
             for(Callable<Integer> t : listCars){
-                futures.add(completionService.submit(t));
+                listCarState.add(completionService.submit(t));
             }
 
             for (int i = 0; i < listCars.size(); ++i) {
 
                 try {
-
-                    //On récupère le premier résultat disponible
-                    //sous la forme d'un Future avec take(). Puis l'appel
-                    //à get() nous donne le résultat du Callable.
                     res = completionService.take().get();
                     if (res != null) {
-
-                        //On affiche le resultat de la tâche
                         System.out.println(res);
                     }
                 }
