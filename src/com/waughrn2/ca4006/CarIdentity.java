@@ -11,9 +11,17 @@ public class CarIdentity implements Callable<Integer> {
     private String driver;
     private int randomProblemFactor;
     private int state;
+
     private List<ArrayBlockingQueue> listEntrances = new ArrayList<>();
     private List<ArrayBlockingQueue> listExits = new ArrayList<>();
 
+    /**
+     *
+     * @param driver
+     * @param randomProblemFactor
+     * @param listEntrances
+     * @param listExits
+     */
     public CarIdentity(String driver, int randomProblemFactor, List<ArrayBlockingQueue> listEntrances, List<ArrayBlockingQueue> listExits){
         this.driver = driver;
         this.randomProblemFactor = randomProblemFactor;
@@ -62,6 +70,11 @@ public class CarIdentity implements Callable<Integer> {
     }
 
 
+    /**
+     *
+     * @return
+     * @throws Exception
+     */
     @Override
     public Integer call() throws Exception {
         int state = randomProblemFactor;
@@ -72,13 +85,16 @@ public class CarIdentity implements Callable<Integer> {
             try
             {
                 System.out.println("Entrance "+ Integer.toString(a) + " remaining Capacity: " + Integer.toString(listEntrances.get(a).remainingCapacity()));
+
+                //TODO Find why there is a warning and remove it for more stability
                 boolean success = listEntrances.get(a).offer(Thread.currentThread(), 5000, TimeUnit.MILLISECONDS);
-                if(success)//Checking if job is to be processed then processing it first and then checking for return
+
+                if(success) //Car got a spot in the parking
                 {
                     System.out.println(driver + ": " + Thread.currentThread() + " manage to find a parking slot");
                     System.out.println("\n");
                     return 0;
-                } else {
+                } else { //Car timed out and is going to next entrance to try to get a spot
                     System.out.println("I'm mad about waiting, i'm moving to next queue");
                     a++;
                 }

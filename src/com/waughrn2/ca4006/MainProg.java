@@ -12,6 +12,10 @@ import java.util.concurrent.*;
  */
 public class MainProg {
 
+
+    /**
+     * Custom constant variables, possibility to ajust values of the assignement if needed.
+     */
     private static final int MAX_CAR = 2000;
     private static final int MAX_SLOT = 1000;
     private static final boolean IS_FAIR = true;
@@ -19,26 +23,55 @@ public class MainProg {
     private static final int NUMBER_TEACHER = 200;
 
 
+
+
+    /**
+     * Queues for entrances. Fairness set to true, we want a real FIFO
+     */
     private ArrayBlockingQueue entrance1 = new ArrayBlockingQueue(400, true);
     private ArrayBlockingQueue entrance2 = new ArrayBlockingQueue(300, true);
     private ArrayBlockingQueue entrance3 = new ArrayBlockingQueue(300, true);
 
+    /**
+     * Queues for exits. Fairness set to true, we want a real FIFO
+     */
     private ArrayBlockingQueue exit1 = new ArrayBlockingQueue(400, true);
     private ArrayBlockingQueue exit2 = new ArrayBlockingQueue(300, true);
     private ArrayBlockingQueue exit3 = new ArrayBlockingQueue(300, true);
 
+    /**
+     * List of entrances, to let cars keep a track of their position
+     */
     private List<ArrayBlockingQueue> listEntrances = new ArrayList<>();
+
+    /**
+     * List of exits, to let cars keep a track of their position
+     */
     private List<ArrayBlockingQueue> listExits = new ArrayList<>();
 
+    /**
+     * ThreadPool, it simulates all the cars.
+     */
     private ExecutorService mExecutor;
 
+    /**
+     * Cars elements as callable, to get a future and to be able to keep track of every car state
+     */
     private List<Callable<Integer>> listCars = new ArrayList<Callable<Integer>>();
 
+
+    /**
+     * Start the program and launch the setup
+     * @param args
+     */
     public static void main(String[] args){
         MainProg main = new MainProg();
         main.setup();
     }
 
+    /**
+     * Initialize all arrays and datas then launch the simulation
+     */
     public void setup(){
         initEntrancesAndExitQueues();
         initExecutor();
@@ -47,6 +80,9 @@ public class MainProg {
         launchSimulation(mExecutor, listCars);
     }
 
+    /**
+     * Initialize cars then shuffle the list for more realism (It is supposed to be a real FIFO with fair access)
+     */
     private void initCars() {
         initTeachers();
         initStudents();
@@ -75,6 +111,10 @@ public class MainProg {
         }
     }
 
+
+    /**
+     * Init the ExecutorService with the constant max_car, which can be modified if needed
+     */
     private void initExecutor() {
         mExecutor = Executors.newFixedThreadPool(MAX_CAR);
     }
@@ -90,6 +130,13 @@ public class MainProg {
         listExits.add(exit3);
     }
 
+    /**
+     * Launch the simulation by feeding data to the executorService, then feed a completionService with
+     * this ExecutorService to keep track of our cars
+     * Shutdown the ExecutorService at the end
+     * @param executor ExecutorService empty
+     * @param listCars List of callable containing the caridentity objects, shuffled.
+     */
     public static void launchSimulation(final ExecutorService executor, List<Callable<Integer>> listCars){
 
         //Le service de terminaison
