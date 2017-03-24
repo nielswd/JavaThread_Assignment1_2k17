@@ -21,33 +21,11 @@ public class MainProg {
     private static final boolean IS_FAIR = true;
     private static final int NUMBER_STUDENT = 1800;
     private static final int NUMBER_TEACHER = 200;
+    private static final int QUEUE_MAX_SIZE = 1000;
+    private static final int NB_ENTRANCE = 3;
+    private static final int NB_EXIT = 3;
 
-
-
-
-    /**
-     * Queues for entrances. Fairness set to true, we want a real FIFO
-     */
-    private ArrayBlockingQueue entrance1 = new ArrayBlockingQueue(400, IS_FAIR);
-    private ArrayBlockingQueue entrance2 = new ArrayBlockingQueue(300, IS_FAIR);
-    private ArrayBlockingQueue entrance3 = new ArrayBlockingQueue(300, IS_FAIR);
-
-    /**
-     * Queues for exits. Fairness set to true, we want a real FIFO
-     */
-    private ArrayBlockingQueue exit1 = new ArrayBlockingQueue(400, true);
-    private ArrayBlockingQueue exit2 = new ArrayBlockingQueue(300, true);
-    private ArrayBlockingQueue exit3 = new ArrayBlockingQueue(300, true);
-
-    /**
-     * List of entrances, to let cars keep a track of their position
-     */
-    private List<ArrayBlockingQueue> listEntrances = new ArrayList<>();
-
-    /**
-     * List of exits, to let cars keep a track of their position
-     */
-    private List<ArrayBlockingQueue> listExits = new ArrayList<>();
+    private final int NUM_THREADS = Runtime.getRuntime().availableProcessors() + 1;
 
     /**
      * ThreadPool, it simulates all the cars.
@@ -57,8 +35,10 @@ public class MainProg {
     /**
      * Cars elements as callable, to get a future and to be able to keep track of every car state
      */
-    private List<Callable<Integer>> listCars = new ArrayList<Callable<Integer>>();
+    private List<Car> listCars = new ArrayList<Car>();
 
+
+    private ParkingManagement mParkingManagement;
 
     /**
      * Start the program and launch the setup
@@ -73,19 +53,27 @@ public class MainProg {
      * Initialize all arrays and datas then launch the simulation
      */
     private void setup(){
-        initEntrancesAndExitQueues();
+        initParking();
         initExecutor();
         initCars();
 
-        launchSimulation(mExecutor, listCars);
+
+        launchSimulation(mExecutor, listCars, mParkingManagement);
+    }
+
+    private void initParking() {
+        this.mParkingManagement = new ParkingManagement(MAX_SLOT, MAX_CAR, NB_ENTRANCE, NB_EXIT, IS_FAIR);
+        ExecutorService parkingService = Executors.newFixedThreadPool(1);
+        parkingService.submit(mParkingManagement);
     }
 
     /**
      * Initialize cars then shuffle the list for more realism (It is supposed to be a real FIFO with fair access)
      */
     private void initCars() {
-        initTeachers();
+
         initStudents();
+        initTeachers();
         shuffleCarListForRealism();
     }
 
@@ -98,7 +86,7 @@ public class MainProg {
             Random rn = new Random();
            int randomFactorProblem =  rn.nextInt(10) + 1;
            int durationStay = rn.nextInt(100) + 1;
-            Callable<Integer> teacherCar = new CarIdentity("teacher", randomFactorProblem, durationStay, listEntrances, listExits);
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement);
             listCars.add(teacherCar);
         }
     }
@@ -108,7 +96,7 @@ public class MainProg {
             Random rn = new Random();
             int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
             int durationStay = rn.nextInt(100) + 1;
-            Callable<Integer> studentCar = new CarIdentity("student", randomFactorProblem, durationStay, listEntrances, listExits);
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement);
             listCars.add(studentCar);
         }
     }
@@ -122,16 +110,6 @@ public class MainProg {
     }
 
 
-    private void initEntrancesAndExitQueues(){
-        listEntrances.add(entrance1);
-        listEntrances.add(entrance2);
-        listEntrances.add(entrance3);
-
-        listExits.add(exit1);
-        listExits.add(exit2);
-        listExits.add(exit3);
-    }
-
     /**
      * Launch the simulation by feeding data to the executorService, then feed a completionService with
      * this ExecutorService to keep track of our cars
@@ -139,8 +117,8 @@ public class MainProg {
      * @param executor ExecutorService empty
      * @param listCars List of callable containing the caridentity objects, shuffled.
      */
-    private static void launchSimulation(final ExecutorService executor, List<Callable<Integer>> listCars){
-
+    private static void launchSimulation(final ExecutorService executor, List<Car> listCars, ParkingManagement parkingManagement){
+        int done = 0;
         CompletionService<Integer> completionService = new ExecutorCompletionService<>(executor);
 
         List<Future<Integer>> listCarState = new ArrayList<>();
@@ -148,6 +126,11 @@ public class MainProg {
         Integer res = null;
         try {
             for(Callable<Integer> t : listCars){
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
                 listCarState.add(completionService.submit(t));
             }
 
@@ -156,7 +139,12 @@ public class MainProg {
                 try {
                     res = completionService.take().get();
                     if (res != null) {
-                        System.out.println(res);
+                       System.out.println(res);
+                       done += 1;
+                       if (done == MAX_CAR){
+                           parkingManagement.setDayIsOver();
+                       }
+
                     }
                 }
                 catch(ExecutionException ignore) {}
