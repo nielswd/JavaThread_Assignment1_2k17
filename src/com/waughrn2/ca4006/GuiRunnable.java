@@ -1,6 +1,4 @@
-package com.waughrn2.ca4006.graphics;
-
-import com.waughrn2.ca4006.MainProg;
+package com.waughrn2.ca4006;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

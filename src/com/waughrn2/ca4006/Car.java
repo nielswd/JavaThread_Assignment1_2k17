@@ -1,7 +1,5 @@
 package com.waughrn2.ca4006;
 
-import com.waughrn2.ca4006.graphics.GuiRunnable;
-
 import java.util.concurrent.*;
 
 /**

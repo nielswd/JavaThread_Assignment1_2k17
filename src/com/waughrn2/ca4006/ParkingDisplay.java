@@ -1,4 +1,4 @@
-package com.waughrn2.ca4006.graphics;
+package com.waughrn2.ca4006;
 
 import javax.swing.*;
 import java.awt.*;
