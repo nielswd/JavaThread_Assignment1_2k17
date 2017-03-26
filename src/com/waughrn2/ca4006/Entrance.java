@@ -29,7 +29,7 @@ import java.util.concurrent.Callable;
 
     private List<Integer> poolParking;
 
-    private String[] data = {"Entrance 1", "1000", "1000", "0.00€", "0", "0"};
+    private String[] data = {"Entrance 1", "1000", "1000", "0.00#20AC", "0", "0"};
 
     public Entrance(int id, int queue_size, int priceStudent, int priceTeacher, boolean isFair, BlockingQueue<Car> entranceQueue, ParkingManagement parking, GuiRunnable mUI,
                         List<Integer> poolParking) {
@@ -143,7 +143,7 @@ import java.util.concurrent.Callable;
 
     private void updateUIEntranceData(){
             data[2] = Integer.toString(entranceQueue.remainingCapacity());
-            data[3] = Integer.toString(moneyReceived) + ".00€";
+            data[3] = Integer.toString(moneyReceived) + ".00#20AC";
             data[4] = "Not implemented";
             data[5] = "Not implemented";
             mUI.updateTableEntrance(id, data);

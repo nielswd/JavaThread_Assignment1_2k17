@@ -151,7 +151,7 @@ public class GuiRunnable implements Runnable {
 
         JLabel labelSpeed = new JLabel("Select Maximum Queue Entrance/Exit:");
         mQueueSizeChooser = new JComboBox(speed);
-        mQueueSizeChooser.setSelectedIndex(0);
+        mQueueSizeChooser.setSelectedIndex(1);
 
         return labelSpeed;
     }
@@ -230,7 +230,7 @@ public class GuiRunnable implements Runnable {
 
         mNbCarChooser.setSelectedIndex(1);
         mNbSlotChooser.setSelectedIndex(1);
-        mQueueSizeChooser.setSelectedIndex(0);
+        mQueueSizeChooser.setSelectedIndex(1);
         mEntranceExitChooser.setSelectedIndex(2);
         setFair.setSelected(true);
     }
