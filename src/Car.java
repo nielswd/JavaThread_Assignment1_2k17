@@ -1,5 +1,3 @@
-package com.waughrn2.ca4006;
-
 import java.util.concurrent.*;
 
 /**

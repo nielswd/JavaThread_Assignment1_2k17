@@ -1,5 +1,3 @@
-package com.waughrn2.ca4006;
-
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
