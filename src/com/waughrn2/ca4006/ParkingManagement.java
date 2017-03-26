@@ -1,5 +1,7 @@
 package com.waughrn2.ca4006;
 
+import com.waughrn2.ca4006.graphics.GuiRunnable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,15 +15,17 @@ public class ParkingManagement implements Callable<Integer> {
     private int maxCar;
     private boolean fairness;
     private BlockingQueue<Car> mParkingQueue;
-    private int nbEntrance;
-    private int nbExit;
 
+    private int nbEntranceExit;
 
+    private GuiRunnable mUI;
 
     private List<Entrance> listEntrancesCallable = new ArrayList<Entrance>();
 
 
     private List<Exit> listExitCallable = new ArrayList<Exit>();
+
+    private int queueSize;
 
 
     /**
@@ -44,22 +48,26 @@ public class ParkingManagement implements Callable<Integer> {
     private ExecutorService mExecutorEntrances;
 
 
+    private List<Integer> poolParking = new ArrayList<>();
+
     /**
      * ThreadPool exits.
      */
     private ExecutorService mExecutorExits;
 
-    ParkingManagement(int maxSlot, int maxCar, int nbEntrance, int nbExit, boolean fairness){
-        this.maxSlot = maxSlot;
-        this.maxCar = maxCar;
-        this.fairness = fairness;
-        this.nbEntrance = nbEntrance;
-        this.nbExit = nbExit;
+    ParkingManagement(int maxSlot, int maxCar, int nbEntrance, int nbExit, boolean fairness, GuiRunnable mUI, int queueSize){
+        this.maxSlot            = maxSlot;
+        this.maxCar             = maxCar;
+        this.fairness           = fairness;
+        this.nbEntranceExit     = nbEntrance;
+        this.mUI                = mUI;
+        this.queueSize          = queueSize;
 
         setupParking();
     }
 
     private void setupParking(){
+        fillPoolParking();
         initEntrancesAndExitQueues();
         createEntrances();
         createExits();
@@ -70,35 +78,41 @@ public class ParkingManagement implements Callable<Integer> {
         initExecutorExit();
     }
 
+    private void fillPoolParking() {
+        for(int a = 0; a < maxSlot;a++){
+            poolParking.add(0);
+        }
+    }
+
     private void initEntrancesAndExitQueues(){
 
-        for(int i = 0;i < nbEntrance;i++){
-            listEntrances.add(new ArrayBlockingQueue<Car>(1000, fairness));
+        for(int i = 0;i < nbEntranceExit;i++){
+            listEntrances.add(new ArrayBlockingQueue<Car>(queueSize, fairness));
         }
-        for(int i = 0;i < nbExit;i++){
-            listExits.add(new ArrayBlockingQueue<Car>(1000, fairness));
+        for(int i = 0;i < nbEntranceExit;i++){
+            listExits.add(new ArrayBlockingQueue<Car>(queueSize, fairness));
         }
     }
 
     private void createEntrances() {
-            for(int i = 0;i < nbEntrance;i++){
-                Entrance entrance = new Entrance(i, 1000, 5, 2, fairness, listEntrances.get(i), this);
+            for(int i = 0;i < nbEntranceExit;i++){
+                Entrance entrance = new Entrance(i, queueSize, 5, 2, fairness, listEntrances.get(i), this, mUI, poolParking);
                 listEntrancesCallable.add(entrance);
             }
     }
 
     private void createExits() {
-        for(int i = 0;i < nbExit;i++){
-            Exit exit = new Exit(i, 1000, fairness, listExits.get(i), this);
+        for(int i = 0;i < nbEntranceExit;i++){
+            Exit exit = new Exit(i, queueSize, fairness, listExits.get(i), this, mUI, poolParking);
             listExitCallable.add(exit);
         }
     }
 
     private void initExecutorEntrances() {
-        mExecutorEntrances = Executors.newFixedThreadPool(nbEntrance);
+        mExecutorEntrances = Executors.newFixedThreadPool(nbEntranceExit);
     }
     private void initExecutorExit() {
-        mExecutorExits = Executors.newFixedThreadPool(nbExit);
+        mExecutorExits = Executors.newFixedThreadPool(nbEntranceExit);
     }
 
     boolean tryAcquireParkingSlot(Car currentCar) throws  InterruptedException{
@@ -183,5 +197,6 @@ public class ParkingManagement implements Callable<Integer> {
         for(Exit exit : listExitCallable){
             exit.setDayIsOver(true);
         }
+        Thread.currentThread().interrupt();
     }
 }

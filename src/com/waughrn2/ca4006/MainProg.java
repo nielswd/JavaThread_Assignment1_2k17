@@ -1,6 +1,8 @@
 package com.waughrn2.ca4006;
 
 
+import com.waughrn2.ca4006.graphics.GuiRunnable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,22 +12,14 @@ import java.util.concurrent.*;
 /**
  * Created by iNfecteD on 22/03/2017.
  */
-public class MainProg {
+public class MainProg implements  Runnable{
 
+    private int maxCar = 2000;
+    private  int maxSlot = 1000;
+    private int queueSize = 1;
+    private boolean isFair = true;
+    private int nbEntranceExit = 3;
 
-    /**
-     * Custom constant variables, possibility to ajust values of the assignement if needed.
-     */
-    private static final int MAX_CAR = 2000;
-    private static final int MAX_SLOT = 1000;
-    private static final boolean IS_FAIR = true;
-    private static final int NUMBER_STUDENT = 1800;
-    private static final int NUMBER_TEACHER = 200;
-    private static final int QUEUE_MAX_SIZE = 1000;
-    private static final int NB_ENTRANCE = 3;
-    private static final int NB_EXIT = 3;
-
-    private final int NUM_THREADS = Runtime.getRuntime().availableProcessors() + 1;
 
     /**
      * ThreadPool, it simulates all the cars.
@@ -40,13 +34,19 @@ public class MainProg {
 
     private ParkingManagement mParkingManagement;
 
-    /**
-     * Start the program and launch the setup
-     * @param args
-     */
-    public static void main(String[] args){
-        MainProg main = new MainProg();
-        main.setup();
+
+    private GuiRunnable mUI;
+
+    private ExecutorService parkingExecutor;
+
+
+    public MainProg(GuiRunnable ui, int maxCar, int maxSlot, int queueSize, boolean isFair, int nbEntranceExit){
+        this.mUI = ui;
+        this.maxCar = maxCar;
+        this.maxSlot = maxSlot;
+        this.queueSize = queueSize;
+        this.isFair = isFair;
+        this.nbEntranceExit = nbEntranceExit;
     }
 
     /**
@@ -57,14 +57,22 @@ public class MainProg {
         initExecutor();
         initCars();
 
+        startSimulation();
+    }
 
-        launchSimulation(mExecutor, listCars, mParkingManagement);
+    public void startSimulation(){
+        try {
+            Thread.sleep(5000);
+            launchSimulation(mExecutor, listCars, mParkingManagement, maxCar);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
     }
 
     private void initParking() {
-        this.mParkingManagement = new ParkingManagement(MAX_SLOT, MAX_CAR, NB_ENTRANCE, NB_EXIT, IS_FAIR);
-        ExecutorService parkingService = Executors.newFixedThreadPool(1);
-        parkingService.submit(mParkingManagement);
+        this.mParkingManagement = new ParkingManagement(maxSlot, maxCar, nbEntranceExit, nbEntranceExit, isFair, mUI, queueSize);
+        parkingExecutor = Executors.newFixedThreadPool(1);
+        parkingExecutor.submit(mParkingManagement);
     }
 
     /**
@@ -82,21 +90,23 @@ public class MainProg {
     }
 
     private void initTeachers() {
-        for(int i = 0;i < NUMBER_TEACHER;i++){
+        for(int i = 0;i < (maxCar/10) ;i++){
             Random rn = new Random();
            int randomFactorProblem =  rn.nextInt(10) + 1;
            int durationStay = rn.nextInt(100) + 1;
-            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement);
+           int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance);
             listCars.add(teacherCar);
         }
     }
 
     private void initStudents() {
-        for(int i = 0;i < NUMBER_STUDENT;i++){
+        for(int i = 0;i < (maxCar - (maxCar/10));i++){
             Random rn = new Random();
             int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
             int durationStay = rn.nextInt(100) + 1;
-            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement);
+            int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance);
             listCars.add(studentCar);
         }
     }
@@ -106,7 +116,7 @@ public class MainProg {
      * Init the ExecutorService with the constant max_car, which can be modified if needed
      */
     private void initExecutor() {
-        mExecutor = Executors.newFixedThreadPool(MAX_CAR);
+        mExecutor = Executors.newFixedThreadPool(maxCar);
     }
 
 
@@ -117,7 +127,7 @@ public class MainProg {
      * @param executor ExecutorService empty
      * @param listCars List of callable containing the caridentity objects, shuffled.
      */
-    private static void launchSimulation(final ExecutorService executor, List<Car> listCars, ParkingManagement parkingManagement){
+    private void launchSimulation(final ExecutorService executor, List<Car> listCars, ParkingManagement parkingManagement, int maxCar){
         int done = 0;
         CompletionService<Integer> completionService = new ExecutorCompletionService<>(executor);
 
@@ -141,8 +151,9 @@ public class MainProg {
                     if (res != null) {
                        System.out.println(res);
                        done += 1;
-                       if (done == MAX_CAR){
+                       if (done == maxCar){
                            parkingManagement.setDayIsOver();
+                           Thread.currentThread().interrupt();
                        }
 
                     }
@@ -156,6 +167,10 @@ public class MainProg {
         finally {
             executor.shutdown();
         }
+    }
+    @Override
+    public void run() {
+        setup();
     }
 
 }

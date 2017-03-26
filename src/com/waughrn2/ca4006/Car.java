@@ -1,5 +1,7 @@
 package com.waughrn2.ca4006;
 
+import com.waughrn2.ca4006.graphics.GuiRunnable;
+
 import java.util.concurrent.*;
 
 /**
@@ -14,17 +16,26 @@ public class Car implements Callable<Integer> {
     private ParkingManagement parking;
     private int carLocation = 0;
 
+    private int locationInParking;
+
+    private GuiRunnable mUI;
+
+    private int randomlyAssignedEntrance = 0;
+
 
     private  boolean inQueue = false;
     private boolean stillLooking = true;
     private boolean tryingToLeave = true;
 
-    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking){
-        this.driver                 = driver;
-        this.randomProblemFactor    = randomProblemFactor;
-        this.durationStay           = durationStay;
-        this.parking                = parking;
-        this.id                     = id;
+    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, GuiRunnable mUI, int randomlyAssignedEntrance){
+        this.driver                     = driver;
+        this.randomProblemFactor        = randomProblemFactor;
+        this.durationStay               = durationStay;
+        this.parking                    = parking;
+        this.id                         = id;
+        this.mUI                        = mUI;
+        this.randomlyAssignedEntrance   = randomlyAssignedEntrance;
+        carLocation = randomlyAssignedEntrance;
     }
 
     String getDriver() {
@@ -64,7 +75,7 @@ public class Car implements Callable<Integer> {
         return findQueue();
     }
 
-    private int findQueue(){
+    public int findQueue(){
         int foundAPlace = 0;
         while (stillLooking) {
             if (inQueue) {
@@ -89,8 +100,8 @@ public class Car implements Callable<Integer> {
                             findQueue();
                         }
                     } else {
+                        System.out.println("CAR IN QUEUE");
                         inQueue = true;
-
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -108,7 +119,7 @@ public class Car implements Callable<Integer> {
 
     private int goToLecture(){
         try {
-            Thread.sleep(1000*randomProblemFactor);
+            Thread.sleep(5000*randomProblemFactor);
             return tryToLeaveParking();
         } catch (InterruptedException e){
             e.printStackTrace();
@@ -162,5 +173,25 @@ public class Car implements Callable<Integer> {
 
     public int getId(){
         return id;
+    }
+
+    public int getLocationInParking() {
+        return locationInParking;
+    }
+
+    public void setLocationInParking(int locationInParking) {
+        this.locationInParking = locationInParking;
+    }
+
+    public void nextQueue(){
+        inQueue = false;
+        int nbEntrances = parking.getListExitCallable().size();
+        if (carLocation < nbEntrances - 1) {
+            carLocation++;
+            findQueue();
+        } else {
+            carLocation = 0;
+            findQueue();
+        }
     }
 }

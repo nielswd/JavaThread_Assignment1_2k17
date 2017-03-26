@@ -1,5 +1,8 @@
 package com.waughrn2.ca4006;
 
+import com.waughrn2.ca4006.graphics.GuiRunnable;
+
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
@@ -14,24 +17,26 @@ public class Exit implements Callable<Integer> {
     private int moneyReceived;
     private int priceStudent;
     private int priceTeacher;
-
+    private GuiRunnable mUI;
     private Car lastCar;
 
 
     private boolean dayIsOver = false;
     private boolean isFair = true;
 
-
+    private List<Integer> poolParking;
 
     private BlockingQueue<Car> exitQueue;
     private ParkingManagement parking;
 
-    public Exit(int id, int queue_size, boolean isFair, BlockingQueue<Car> exitQueue, ParkingManagement parking){
+    public Exit(int id, int queue_size, boolean isFair, BlockingQueue<Car> exitQueue, ParkingManagement parking, GuiRunnable mUI, List<Integer> poolParking){
         this.id = id;
         this.queueSize = queue_size;
         this.isFair = isFair;
         this.exitQueue = exitQueue;
         this.parking = parking;
+        this.mUI = mUI;
+        this.poolParking = poolParking;
     }
 
     public boolean isDayOver() {
@@ -75,7 +80,8 @@ public class Exit implements Callable<Integer> {
                         parking.tryLeaveParking(car, id);
                         car.setTryingToLeave(false);
                         exitQueue.poll();
-
+                        mUI.restoreParkingSlot(car.getLocationInParking());
+                        poolParking.set(car.getLocationInParking(), 0);
                     } catch (InterruptedException interrupted1) {
                         interrupted1.printStackTrace();
                     }
