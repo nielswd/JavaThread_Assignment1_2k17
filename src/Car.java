@@ -13,6 +13,7 @@ public class Car implements Callable<Integer> {
     private int carLocation = 0;
 
     private int locationInParking;
+    private int morePositionInParking;
 
     private GuiRunnable mUI;
 
@@ -23,15 +24,20 @@ public class Car implements Callable<Integer> {
     private boolean stillLooking = true;
     private boolean tryingToLeave = true;
 
-    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, GuiRunnable mUI, int randomlyAssignedEntrance){
-        this.driver                     = driver;
-        this.randomProblemFactor        = randomProblemFactor;
-        this.durationStay               = durationStay;
-        this.parking                    = parking;
-        this.id                         = id;
-        this.mUI                        = mUI;
-        this.randomlyAssignedEntrance   = randomlyAssignedEntrance;
-        carLocation = randomlyAssignedEntrance;
+    private boolean isABadCarParkerAKA4x4People = false;
+    private Car secondSpotTaken;
+
+    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, GuiRunnable mUI, int randomlyAssignedEntrance, boolean isABadCarParkerAKA4x4People){
+        this.driver                         = driver;
+        this.randomProblemFactor            = randomProblemFactor;
+        this.durationStay                   = durationStay;
+        this.parking                        = parking;
+        this.id                             = id;
+        this.mUI                            = mUI;
+        this.randomlyAssignedEntrance       = randomlyAssignedEntrance;
+        this.carLocation                    = randomlyAssignedEntrance;
+        this.isABadCarParkerAKA4x4People    = isABadCarParkerAKA4x4People;
+
     }
 
     String getDriver() {
@@ -96,7 +102,7 @@ public class Car implements Callable<Integer> {
                             findQueue();
                         }
                     } else {
-                        System.out.println("CAR IN QUEUE");
+                        System.out.println("Driver " + Integer.toString(getId()) + " (" +  getDriver() +") entered the queue at Entrance " + Integer.toString(carLocation + 1));
                         inQueue = true;
                     }
                 } catch (InterruptedException e) {
@@ -189,5 +195,17 @@ public class Car implements Callable<Integer> {
             carLocation = 0;
             findQueue();
         }
+    }
+
+    public boolean isABadCarParkerAKA4x4People() {
+        return isABadCarParkerAKA4x4People;
+    }
+
+    public int getMorePositionInParking() {
+        return morePositionInParking;
+    }
+
+    public void setMorePositionInParking(int morePositionInParking) {
+        this.morePositionInParking = morePositionInParking;
     }
 }

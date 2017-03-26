@@ -389,9 +389,11 @@ public class GuiRunnable implements Runnable {
         mFrame.validate();
     }
 
-    public void updateParkingSlot(int index, boolean isStudent){
+    public void updateParkingSlot(int index, boolean isStudent, boolean isA4x4User){
         ParkingSlotDisplay updatedComponent = (ParkingSlotDisplay ) parkingDisplay.getComponent(index);
-        if (isStudent){
+        if (isA4x4User){
+            updatedComponent.updateSlot(Color.red);
+        } else if (isStudent){
             updatedComponent.updateSlot(Color.gray);
         } else {
             updatedComponent.updateSlot(Color.darkGray);

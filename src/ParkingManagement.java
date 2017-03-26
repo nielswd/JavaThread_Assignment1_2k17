@@ -110,14 +110,38 @@ public class ParkingManagement implements Callable<Integer> {
         mExecutorExits = Executors.newFixedThreadPool(nbEntranceExit);
     }
 
-    boolean tryAcquireParkingSlot(Car currentCar) throws  InterruptedException{
-        return mParkingQueue.offer(currentCar, 0, TimeUnit.MILLISECONDS);
+    boolean tryAcquireParkingSlot(Car currentCar, boolean isABadCarParkerAKA4x4People) throws  InterruptedException{
+        if (isABadCarParkerAKA4x4People){
+            boolean firstSpot = mParkingQueue.offer(currentCar, 0, TimeUnit.MILLISECONDS);
+            boolean secondSpot = mParkingQueue.offer(currentCar, 0, TimeUnit.MILLISECONDS);
+            if (firstSpot && secondSpot){
+                System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") is a bad car parker. You should hate him");
+                return true;
+            } else {
+                if (firstSpot){
+                    mParkingQueue.remove(currentCar);
+                }
+                if (secondSpot){
+                    mParkingQueue.remove(currentCar);
+                }
+                return false;
+            }
+        } else {
+            return mParkingQueue.offer(currentCar, 0, TimeUnit.MILLISECONDS);
+        }
     }
 
-    boolean tryLeaveParking(Car currentCar, int id) throws  InterruptedException{
-        System.out.println("Driver " + currentCar.getDriver() + " which is id: " + currentCar.getId() + "left the parking from exit " + id);
-        return mParkingQueue.remove(currentCar);
+    boolean tryLeaveParking(Car currentCar, int id, boolean isABadCarParkerAKA4x4People) throws  InterruptedException{
+        if (isABadCarParkerAKA4x4People){
+            mParkingQueue.remove(currentCar);
+            mParkingQueue.remove(currentCar);
+            return true;
+        } else {
+            return mParkingQueue.remove(currentCar);
+        }
     }
+
+
 
 
     @Override

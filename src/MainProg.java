@@ -57,7 +57,7 @@ public class MainProg implements  Runnable{
 
     public void startSimulation(){
         try {
-            Thread.sleep(5000);
+            Thread.sleep(2000);
             launchSimulation(mExecutor, listCars, mParkingManagement, maxCar);
         } catch (InterruptedException e){
             e.printStackTrace();
@@ -90,7 +90,11 @@ public class MainProg implements  Runnable{
            int randomFactorProblem =  rn.nextInt(10) + 1;
            int durationStay = rn.nextInt(100) + 1;
            int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
-            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance);
+           boolean isABadCarParkerAKA4x4People = false;
+           if (randomFactorProblem == 9 ||randomFactorProblem == 3) {
+               isABadCarParkerAKA4x4People = true;
+           }
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
             listCars.add(teacherCar);
         }
     }
@@ -101,7 +105,11 @@ public class MainProg implements  Runnable{
             int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
             int durationStay = rn.nextInt(100) + 1;
             int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
-            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance);
+            boolean isABadCarParkerAKA4x4People = false;
+            if (randomFactorProblem == 9) {
+                isABadCarParkerAKA4x4People = true;
+            }
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
             listCars.add(studentCar);
         }
     }

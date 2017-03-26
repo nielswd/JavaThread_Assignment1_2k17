@@ -104,22 +104,62 @@ import java.util.concurrent.Callable;
                     lastCar = car;
                     try {
                         Thread.sleep(car.getrandomProblemFactor() * 10);
-                        boolean isAbleToPark = parking.tryAcquireParkingSlot(car);
-                        if (isAbleToPark) {
+                        boolean isAbleToPark;
+                        if (car.isABadCarParkerAKA4x4People()){
+                            isAbleToPark = parking.tryAcquireParkingSlot(car, true);
+                        } else {
+                            isAbleToPark = parking.tryAcquireParkingSlot(car, false);
+                        }
+
+                        if (isAbleToPark && !car.isABadCarParkerAKA4x4People()) {
                             int availableSlotPos = poolParking.lastIndexOf(0);
                             poolParking.set(availableSlotPos, 1);
                             car.setLocationInParking(availableSlotPos);
                             if (car.getDriver().equals("teacher")){
                                 addMoney(priceTeacher);
-                                mUI.updateParkingSlot(availableSlotPos, false);
+                                mUI.updateParkingSlot(availableSlotPos, false, false);
                             } else {
                                 addMoney(priceStudent);
-                                mUI.updateParkingSlot(availableSlotPos, true);
+                                mUI.updateParkingSlot(availableSlotPos, true, false);
                             }
                             updateUIEntranceData();
                             car.setStillLooking(false);
                             entranceQueue.poll();
-                            System.out.println("Driver " + car.getDriver() + " managed to park at entrance " + id);
+                            System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+                        } else if (isAbleToPark && car.isABadCarParkerAKA4x4People()) {
+
+                            boolean nextSlotPos =false;
+                            boolean previousSlotPos = false;
+                            int availableSlotPos = poolParking.lastIndexOf(0);
+                            int moreAvailableSlotPos = 0;
+                            if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
+                                nextSlotPos =true;
+                                moreAvailableSlotPos = availableSlotPos + 1;
+                                poolParking.set(availableSlotPos, 1);
+                                poolParking.set(availableSlotPos + 1, 1);
+                                car.setLocationInParking(availableSlotPos);
+                                car.setMorePositionInParking(availableSlotPos + 1);
+                            } else if ((availableSlotPos - 1) < poolParking.size() && poolParking.get(availableSlotPos - 1) == 0){
+                                previousSlotPos = true;
+                                moreAvailableSlotPos = availableSlotPos  - 1;
+                                poolParking.set(availableSlotPos, 1);
+                                poolParking.set(availableSlotPos - 1, 1);
+                                car.setLocationInParking(availableSlotPos);
+                                car.setMorePositionInParking(availableSlotPos - 1);
+                            }
+                            if (car.getDriver().equals("teacher")){
+                                addMoney(priceTeacher);
+                                mUI.updateParkingSlot(availableSlotPos, false, true);
+                                mUI.updateParkingSlot(moreAvailableSlotPos, false, true);
+                            } else {
+                                addMoney(priceStudent);
+                                mUI.updateParkingSlot(availableSlotPos, true, true);
+                                mUI.updateParkingSlot(moreAvailableSlotPos, true, true);
+                            }
+                            updateUIEntranceData();
+                            car.setStillLooking(false);
+                            entranceQueue.poll();
+                            System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to park via Entrance " + Integer.toString(id));
                         } else {
                             car.nextQueue();
                         }

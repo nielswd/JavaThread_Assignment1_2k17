@@ -73,11 +73,22 @@ public class Exit implements Callable<Integer> {
                     lastCar = car;
                     try {
                         Thread.sleep(car.getrandomProblemFactor() * 10);
-                        parking.tryLeaveParking(car, id);
-                        car.setTryingToLeave(false);
-                        exitQueue.poll();
-                        mUI.restoreParkingSlot(car.getLocationInParking());
-                        poolParking.set(car.getLocationInParking(), 0);
+                        if (!car.isABadCarParkerAKA4x4People()) {
+                            parking.tryLeaveParking(car, id, false);
+                            car.setTryingToLeave(false);
+                            exitQueue.poll();
+                            mUI.restoreParkingSlot(car.getLocationInParking());
+                            poolParking.set(car.getLocationInParking(), 0);
+                        } else {
+                            parking.tryLeaveParking(car, id, true);
+                            car.setTryingToLeave(false);
+                            exitQueue.poll();
+                            mUI.restoreParkingSlot(car.getLocationInParking());
+                            mUI.restoreParkingSlot(car.getMorePositionInParking());
+                            poolParking.set(car.getLocationInParking(), 0);
+                            poolParking.set(car.getMorePositionInParking(), 0);
+                        }
+                        System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to leave the parking at Exit " + Integer.toString(id));
                     } catch (InterruptedException interrupted1) {
                         interrupted1.printStackTrace();
                     }
