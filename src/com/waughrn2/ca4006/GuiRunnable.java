@@ -111,6 +111,8 @@ public class GuiRunnable implements Runnable {
         addTopSideComponents(labelNbCars, labelSpeed, labelNbSlots, labelEntranceExit);
     }
 
+    //TODO Remove uncheck warning. Quick fix : supresswarning
+    @SuppressWarnings("unchecked")
     private JLabel initCarChooser(){
         String[] numberCars = new String[10];
         for (int i = 0; i < 10; i++){
@@ -124,6 +126,8 @@ public class GuiRunnable implements Runnable {
         return labelNbCars;
     }
 
+    //TODO Remove uncheck warning. Quick fix : supresswarning
+    @SuppressWarnings("unchecked")
     private JLabel initSlotChooser(){
         String[] availableSlots = new String[10];
         for (int i = 0; i < 10; i++){
@@ -137,6 +141,8 @@ public class GuiRunnable implements Runnable {
         return labelNbSlots;
     }
 
+    //TODO Remove uncheck warning. Quick fix : supresswarning
+    @SuppressWarnings("unchecked")
     private JLabel initQueueSizeChooser(){
         String[] speed = new String[10];
         for (int a = 0; a < 10; a++){
@@ -150,6 +156,8 @@ public class GuiRunnable implements Runnable {
         return labelSpeed;
     }
 
+    //TODO Remove uncheck warning. Quick fix : supresswarning
+    @SuppressWarnings("unchecked")
     private JLabel initEntranceExitChooser(){
         String[] entrance = new String[5];
         for (int a = 0; a < 5; a++){
@@ -263,6 +271,7 @@ public class GuiRunnable implements Runnable {
         try {
             table.setAutoCreateRowSorter(true);
         } catch(Exception continuewithNoSort) {
+            continuewithNoSort.printStackTrace();
         }
 
 
