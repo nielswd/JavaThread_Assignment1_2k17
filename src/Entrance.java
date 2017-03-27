@@ -30,8 +30,6 @@ import java.util.concurrent.locks.Lock;
 
     private List<Integer> poolParking;
 
-    private int totalParkedCar = 0;
-
     private String[] data = {"Entrance 1", "1000", "1000", "0.00€", "0", "0"};
 
     private Lock writeLock;
@@ -39,15 +37,15 @@ import java.util.concurrent.locks.Lock;
 
     Entrance(int id, int priceStudent, int priceTeacher, BlockingQueue<Car> entranceQueue, ParkingManagement parking, UIDesign mUI,
              List<Integer> poolParking, Lock writeLock, Lock readLock) {
-        this.id             = id;
-        this.priceStudent   = priceStudent;
-        this.priceTeacher   = priceTeacher;
-        this.entranceQueue  = entranceQueue;
-        this.parking        = parking;
-        this.mUI            = mUI;
-        this.poolParking    = poolParking;
-        this.readLock       = readLock;
-        this.writeLock      = writeLock;
+        this.id                 = id;
+        this.priceStudent       = priceStudent;
+        this.priceTeacher       = priceTeacher;
+        this.entranceQueue      = entranceQueue;
+        this.parking            = parking;
+        this.mUI                = mUI;
+        this.poolParking        = poolParking;
+        this.readLock           = readLock;
+        this.writeLock          = writeLock;
     }
 
     BlockingQueue<Car> getEntranceQueue() {
@@ -56,10 +54,6 @@ import java.util.concurrent.locks.Lock;
 
     private void addMoney(int amount){
         this.moneyReceived += amount;
-    }
-
-    public int getTotalParkedCar() {
-        return totalParkedCar;
     }
 
     public void setDayIsOver(boolean dayIsOver) {
@@ -164,10 +158,9 @@ import java.util.concurrent.locks.Lock;
     }
 
     private void parkCurrentCarAlone(Car currentCar){
-        totalParkedCar += 1;
         int availableSlotPos = poolParking.indexOf(0);
         if (parkedAlone) {
-            readLock.lock();
+            writeLock.lock();
             try {
                 availableSlotPos = poolParking.indexOf(0);
                 if (availableSlotPos == -1) {
@@ -186,13 +179,12 @@ import java.util.concurrent.locks.Lock;
                     System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") managed to park via Entrance " + Integer.toString(id));
                 }
             } finally {
-                readLock.unlock();
+                writeLock.unlock();
             }
         }
     }
 
     private void parkCurrentCar(Car currentCar){
-        totalParkedCar += 1;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
         poolParking.set(availableSlotPos, 1);
@@ -208,7 +200,6 @@ import java.util.concurrent.locks.Lock;
     }
 
     private void help4x4DriverToParkAlone(Car current4x4Driver){
-        totalParkedCar += 1;
         int availableSlotPos = poolParking.indexOf(0);
         if (parkedAlone) {
             writeLock.lock();
@@ -234,15 +225,6 @@ import java.util.concurrent.locks.Lock;
                     updateAndPrint(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
                     current4x4Driver.setPrintedItOnUI(true);
                 }else{
-                    //System.out.println("Car " + current4x4Driver.getId() + " got a spot but couldn't update the UI");
-//                    try {
-//                        parking.tryLeaveParking(current4x4Driver, true);
-//                        totalParkedCar -= 1;
-//                        current4x4Driver.nextQueue();
-//                    } catch (InterruptedException r){
-//                        r.printStackTrace();
-//                        Thread.currentThread().interrupt();
-//                    }
                     tryAcquireParkingSlot(current4x4Driver);
                 }
             } finally {
@@ -253,7 +235,6 @@ import java.util.concurrent.locks.Lock;
     }
 
     private void help4x4DriverToPark(Car current4x4Driver){
-        totalParkedCar += 1;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
         int moreAvailableSlotPos = 0;

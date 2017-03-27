@@ -1,3 +1,4 @@
+import java.rmi.server.UID;
 import java.util.concurrent.*;
 
 /**
@@ -23,10 +24,13 @@ public class Car implements Callable<Integer> {
     private boolean useQueue;
 
     private ParkingManagement parking;
+    private UIDesign UI;
 
     private int carLocation             = 0;
     private int locationInParking       = 0;
     private int morePositionInParking   = 0;
+
+    private int totalCarInParking;
 
     private boolean inQueue                     = false;
     private boolean stillLooking                = true;
@@ -36,7 +40,9 @@ public class Car implements Callable<Integer> {
     private boolean gotASpot = false;
     private boolean printedItOnUI = false;
 
-    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, int randomlyAssignedEntrance, boolean isABadCarParkerAKA4x4People, boolean useQueue){
+
+
+    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, int randomlyAssignedEntrance, boolean isABadCarParkerAKA4x4People, boolean useQueue, int totalCarInParking, UIDesign UI){
         this.driver                         = driver;
         this.randomProblemFactor            = randomProblemFactor;
         this.durationStay                   = durationStay;
@@ -45,7 +51,8 @@ public class Car implements Callable<Integer> {
         this.carLocation                    = randomlyAssignedEntrance;
         this.isABadCarParkerAKA4x4People    = isABadCarParkerAKA4x4People;
         this.useQueue                       = useQueue;
-
+        this.totalCarInParking              = totalCarInParking;
+        this.UI                             = UI;
     }
 
     void setStillLooking(boolean stillLooking) {
@@ -124,6 +131,8 @@ public class Car implements Callable<Integer> {
             nextQueue();
         } else {
             System.out.println("Driver " + Integer.toString(getId()) + " (" +  getDriver() +") entered the queue at Entrance " + Integer.toString(carLocation + 1));
+            parking.setTotalCarInParking(parking.getTotalCarInParking() + 1);
+            UI.updateCarCount(parking.getTotalCarInParking());
             inQueue = true;
         }
     }
@@ -142,6 +151,8 @@ public class Car implements Callable<Integer> {
             }
         } else {
             System.out.println("Driver " + Integer.toString(getId()) + " (" +  getDriver() +") entered the queue at Entrance " + Integer.toString(carLocation + 1));
+            parking.setTotalCarInParking(parking.getTotalCarInParking() + 1);
+            UI.updateCarCount(parking.getTotalCarInParking());
             inQueue = true;
         }
     }

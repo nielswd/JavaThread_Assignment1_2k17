@@ -16,6 +16,10 @@ public class CarParkManagement implements  Runnable{
     private int nbEntranceExit = 3;
 
 
+
+    private int totalCarInParking = 0;
+
+
     /**
      * ThreadPool, it simulates all the cars.
      */
@@ -33,6 +37,8 @@ public class CarParkManagement implements  Runnable{
     private UIDesign mUI;
 
     private ExecutorService parkingExecutor;
+
+
 
 
     public CarParkManagement(UIDesign ui, int maxCar, int maxSlot, int queueSize, boolean isFair, int nbEntranceExit){
@@ -87,14 +93,14 @@ public class CarParkManagement implements  Runnable{
     private void initTeachers() {
         for(int i = 0;i < (maxCar/10) ;i++){
             Random rn = new Random();
-           int randomFactorProblem =  rn.nextInt(10) + 1;
+           int randomFactorProblem =  rn.nextInt(35) + 1;
            int durationStay = rn.nextInt(100) + 1;
            int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
            boolean isABadCarParkerAKA4x4People = false;
            if (randomFactorProblem == 9) {
                isABadCarParkerAKA4x4People = true;
            }
-            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair);
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair, totalCarInParking, mUI);
             listCars.add(teacherCar);
         }
     }
@@ -102,14 +108,14 @@ public class CarParkManagement implements  Runnable{
     private void initStudents() {
         for(int i = 0;i < (maxCar - (maxCar/10));i++){
             Random rn = new Random();
-            int randomFactorProblem =  rn.nextInt(10 - 1 + 1) + 1;
+            int randomFactorProblem =  rn.nextInt(35) + 1;
             int durationStay = rn.nextInt(100) + 1;
             int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
             boolean isABadCarParkerAKA4x4People = false;
             if (randomFactorProblem == 9) {
                 isABadCarParkerAKA4x4People = true;
             }
-            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair);
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair,totalCarInParking, mUI);
             listCars.add(studentCar);
         }
     }
@@ -146,7 +152,6 @@ public class CarParkManagement implements  Runnable{
                 }
                 listCarState.add(completionService.submit(t));
             }
-
             for (int i = 0; i < listCars.size(); ++i) {
 
                 try {
@@ -177,8 +182,4 @@ public class CarParkManagement implements  Runnable{
         setup();
     }
 
-
-    public void dayIsOverForManagementTeam(){
-
-    }
 }

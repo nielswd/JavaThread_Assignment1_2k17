@@ -24,7 +24,7 @@ public class UIDesign implements Runnable {
     private int     maxCar          = 2000;
     private  int    maxSlot         = 1000;
     private int     queueSize       = 1;
-    private boolean isFair          = true;
+    private boolean isFair          = false;
     private int     nbEntranceExit  = 3;
 
     /**
@@ -45,6 +45,8 @@ public class UIDesign implements Runnable {
     private JButton     stopSimulation;
     private JButton     startSimulation;
     private JCheckBox   setFair;
+    private JLabel      carCountLabel;
+    private JLabel      carCount;
 
     /**
      * Dynamic displays components
@@ -121,8 +123,11 @@ public class UIDesign implements Runnable {
         JLabel labelSpeed = initQueueSizeChooser();
         JLabel labelEntranceExit = initEntranceExitChooser();
 
-        setFair = new JCheckBox("Use queue for Entrance/Exit", true);
+        setFair = new JCheckBox("Use queue for Entrance/Exit", false);
 
+
+        carCountLabel = new JLabel("Cars in parking : ");
+        carCount = new JLabel(Integer.toString(maxCar));
         resetValues = new JButton("Reset Values");
         stopSimulation = new JButton("Stop Simulation");
         startSimulation = new JButton("Start Simulation");
@@ -236,6 +241,8 @@ public class UIDesign implements Runnable {
         mTopSidNav.add(setFair);
         mTopSidNav.add(resetValues);
         mTopSidNav.add(startSimulation);
+        mTopSidNav.add(carCountLabel);
+        mTopSidNav.add(carCount);
     }
 
     /**
@@ -512,4 +519,9 @@ public class UIDesign implements Runnable {
         tableScroll.repaint();
     }
 
+    public void updateCarCount(int carcount){
+        carCount.setText(Integer.toString(carcount));
+        carCount.revalidate();
+        carCount.repaint();
+    }
 }

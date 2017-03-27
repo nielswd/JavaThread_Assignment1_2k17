@@ -15,6 +15,9 @@ public class ParkingManagement implements Callable<Integer> {
     private int nbEntranceExit;
     private int queueSize;
 
+    private int totalParkedCar = 0;
+    private int totalCarInParking = 0;
+
     private UIDesign mUI;
 
     private List<Entrance> listEntrancesCallable    = new ArrayList<Entrance>();
@@ -221,5 +224,13 @@ public class ParkingManagement implements Callable<Integer> {
         for(Exit exit : listExitCallable){
             exit.setDayIsOver(true);
         }
+    }
+
+    public int getTotalCarInParking() {
+        return totalCarInParking;
+    }
+
+    public void setTotalCarInParking(int totalCarInParking) {
+        this.totalCarInParking = totalCarInParking;
     }
 }

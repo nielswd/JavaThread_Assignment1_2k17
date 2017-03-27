@@ -95,7 +95,10 @@ public class Exit implements Callable<Integer> {
                             poolParking.set(car.getLocationInParking(), 0);
                             poolParking.set(car.getMorePositionInParking(), 0);
                         }
+                        parking.setTotalCarInParking(parking.getTotalCarInParking() - 1);
+                        mUI.updateCarCount(parking.getTotalCarInParking());
                         System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to leave the parking at Exit " + Integer.toString(id));
+
                     } catch (InterruptedException interrupted1) {
                         interrupted1.printStackTrace();
                     }
