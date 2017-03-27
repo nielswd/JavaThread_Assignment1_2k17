@@ -1,6 +1,10 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Created by iNfecteD on 22/03/2017.
@@ -16,6 +20,7 @@ import java.util.concurrent.Callable;
 
 
     private boolean dayIsOver = false;
+    private boolean parkedAlone = false;
 
     private Car lastCar = null;
     private UIDesign mUI;
@@ -29,8 +34,11 @@ import java.util.concurrent.Callable;
 
     private String[] data = {"Entrance 1", "1000", "1000", "0.00€", "0", "0"};
 
+    private Lock writeLock;
+    private Lock readLock;
+
     Entrance(int id, int priceStudent, int priceTeacher, BlockingQueue<Car> entranceQueue, ParkingManagement parking, UIDesign mUI,
-                        List<Integer> poolParking) {
+             List<Integer> poolParking, Lock writeLock, Lock readLock) {
         this.id             = id;
         this.priceStudent   = priceStudent;
         this.priceTeacher   = priceTeacher;
@@ -38,6 +46,8 @@ import java.util.concurrent.Callable;
         this.parking        = parking;
         this.mUI            = mUI;
         this.poolParking    = poolParking;
+        this.readLock       = readLock;
+        this.writeLock      = writeLock;
     }
 
     BlockingQueue<Car> getEntranceQueue() {
@@ -76,10 +86,8 @@ import java.util.concurrent.Callable;
 
                         if (isAbleToPark && !car.isABadCarParkerAKA4x4People()) {
                             parkCurrentCar(car);
-                            totalParkedCar += 1;
                         } else if (isAbleToPark && car.isABadCarParkerAKA4x4People()) {
                             help4x4DriverToPark(car);
-                            totalParkedCar += 1;
                         } else {
                             car.nextQueue();
                         }
@@ -110,7 +118,7 @@ import java.util.concurrent.Callable;
             mUI.updateTableEntrance(id, data);
     }
 
-    public boolean tryAcquireParkingSlot(Car currentCar){
+    private boolean tryAcquireParkingSlot(Car currentCar){
         boolean isAbleToPark;
         try {
             if (currentCar.isABadCarParkerAKA4x4People()) {
@@ -122,23 +130,27 @@ import java.util.concurrent.Callable;
             isAbleToPark = false;
             Thread.currentThread().interrupt();
         }
+//        System.out.println("IsAbleToPark: " + isAbleToPark);
+        if (isAbleToPark){
+            currentCar.setGotASpot(true);
+        }
         return isAbleToPark;
     }
 
     boolean carTryToFindSpotAlone(Car currentCar){
+        parkedAlone = true;
+        boolean copyOfIsAbleToPark = false;
         if (currentCar != lastCar) {
             lastCar = currentCar;
-            boolean isAbleToPark = false;
             try {
                 Thread.sleep(currentCar.getrandomProblemFactor() * 50);
-                isAbleToPark = tryAcquireParkingSlot(currentCar);
+                boolean isAbleToPark = tryAcquireParkingSlot(currentCar);
+                copyOfIsAbleToPark = isAbleToPark;
 
                 if (isAbleToPark && !currentCar.isABadCarParkerAKA4x4People()) {
-                    parkCurrentCar(currentCar);
-                    totalParkedCar += 1;
+                    parkCurrentCarAlone(currentCar);
                 } else if (isAbleToPark && currentCar.isABadCarParkerAKA4x4People()) {
-                    help4x4DriverToPark(currentCar);
-                    totalParkedCar += 1;
+                    help4x4DriverToParkAlone(currentCar);
                 } else {
                     currentCar.nextQueue();
                 }
@@ -146,28 +158,98 @@ import java.util.concurrent.Callable;
                 interrupted1.printStackTrace();
                 Thread.currentThread().interrupt();
             }
-            return isAbleToPark;
+            return  copyOfIsAbleToPark;
         }
-        return false;
+        return copyOfIsAbleToPark;
+    }
+
+    private void parkCurrentCarAlone(Car currentCar){
+        totalParkedCar += 1;
+        int availableSlotPos = poolParking.indexOf(0);
+        if (parkedAlone) {
+            readLock.lock();
+            try {
+                availableSlotPos = poolParking.indexOf(0);
+                if (availableSlotPos == -1) {
+                    System.out.println("-1 ...");
+                    parkCurrentCar(currentCar);
+                } else {
+                    poolParking.set(availableSlotPos, 1);
+                    currentCar.setLocationInParking(availableSlotPos);
+
+                    updateParkingSlotAndAddMoney(currentCar, availableSlotPos);
+
+
+                    currentCar.setStillLooking(false);
+                    entranceQueue.poll();
+                    updateUIEntranceData();
+                    System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+                }
+            } finally {
+                readLock.unlock();
+            }
+        }
     }
 
     private void parkCurrentCar(Car currentCar){
         totalParkedCar += 1;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
-        if (availableSlotPos == -1){
-            System.out.println("-1 bitch...");
-        }
         poolParking.set(availableSlotPos, 1);
         currentCar.setLocationInParking(availableSlotPos);
 
         updateParkingSlotAndAddMoney(currentCar, availableSlotPos);
-
+        updateUIEntranceData();
 
         currentCar.setStillLooking(false);
         entranceQueue.poll();
-        updateUIEntranceData();
+
         System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+    }
+
+    private void help4x4DriverToParkAlone(Car current4x4Driver){
+        totalParkedCar += 1;
+        int availableSlotPos = poolParking.indexOf(0);
+        if (parkedAlone) {
+            writeLock.lock();
+            try {
+                availableSlotPos = poolParking.indexOf(0);
+                int moreAvailableSlotPos = 0;
+                if (availableSlotPos == -1) {
+                    help4x4DriverToParkAlone(current4x4Driver);
+                } else if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
+                    moreAvailableSlotPos = availableSlotPos + 1;
+                    poolParking.set(availableSlotPos, 1);
+                    poolParking.set(availableSlotPos + 1, 1);
+                    current4x4Driver.setLocationInParking(availableSlotPos);
+                    current4x4Driver.setMorePositionInParking(availableSlotPos + 1);
+                    updateAndPrint(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
+                    current4x4Driver.setPrintedItOnUI(true);
+                } else if ((availableSlotPos - 1) < poolParking.size() && poolParking.get(availableSlotPos - 1) == 0) {
+                    moreAvailableSlotPos = availableSlotPos - 1;
+                    poolParking.set(availableSlotPos, 1);
+                    poolParking.set(availableSlotPos - 1, 1);
+                    current4x4Driver.setLocationInParking(availableSlotPos);
+                    current4x4Driver.setMorePositionInParking(availableSlotPos - 1);
+                    updateAndPrint(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
+                    current4x4Driver.setPrintedItOnUI(true);
+                }else{
+                    //System.out.println("Car " + current4x4Driver.getId() + " got a spot but couldn't update the UI");
+//                    try {
+//                        parking.tryLeaveParking(current4x4Driver, true);
+//                        totalParkedCar -= 1;
+//                        current4x4Driver.nextQueue();
+//                    } catch (InterruptedException r){
+//                        r.printStackTrace();
+//                        Thread.currentThread().interrupt();
+//                    }
+                    tryAcquireParkingSlot(current4x4Driver);
+                }
+            } finally {
+                writeLock.unlock();
+            }
+        }
+
     }
 
     private void help4x4DriverToPark(Car current4x4Driver){
@@ -175,9 +257,7 @@ import java.util.concurrent.Callable;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
         int moreAvailableSlotPos = 0;
-        if (availableSlotPos == -1){
-            System.out.println("-1 bitch...4x4");
-        }
+
         if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
             moreAvailableSlotPos = availableSlotPos + 1;
             poolParking.set(availableSlotPos, 1);
@@ -193,7 +273,16 @@ import java.util.concurrent.Callable;
         }
 
         updateParkingSlotAndAddMoney4x4(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
+        updateUIEntranceData();
 
+        current4x4Driver.setStillLooking(false);
+        entranceQueue.poll();
+
+        System.out.println("Driver " + Integer.toString(current4x4Driver.getId()) + " (" +  current4x4Driver.getDriver() +") finally managed to park via Entrance " + Integer.toString(id));
+    }
+
+    private void updateAndPrint(Car current4x4Driver, int availableSlotPos, int moreAvailableSlotPos){
+        updateParkingSlotAndAddMoney4x4(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
 
         current4x4Driver.setStillLooking(false);
         entranceQueue.poll();

@@ -1,6 +1,10 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by nielswd on 23/03/2017.
@@ -31,7 +35,7 @@ public class ParkingManagement implements Callable<Integer> {
     private List<ArrayBlockingQueue<Car>> listExits     = new ArrayList<>();
 
 
-    private List<Integer> poolParking                   = new ArrayList<>();
+    private List<Integer> poolParking                   = Collections.synchronizedList(new ArrayList<Integer>());
 
     /**
      * ThreadPool entrances.
@@ -42,6 +46,10 @@ public class ParkingManagement implements Callable<Integer> {
      * ThreadPool exits.
      */
     private ExecutorService mExecutorExits;
+
+    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private Lock readLock = readWriteLock.readLock();
+    private Lock writeLock = readWriteLock.writeLock();
 
     ParkingManagement(int maxSlot, int nbEntranceExit, boolean fairness, UIDesign mUI, int queueSize){
         this.maxSlot            = maxSlot;
@@ -69,6 +77,7 @@ public class ParkingManagement implements Callable<Integer> {
         for(int a = 0; a < maxSlot;a++){
             poolParking.add(0);
         }
+
     }
 
     private void initEntrancesAndExitQueues(){
@@ -83,7 +92,7 @@ public class ParkingManagement implements Callable<Integer> {
 
     private void createEntrances() {
             for(int i = 0;i < nbEntranceExit;i++){
-                Entrance entrance = new Entrance(i,5, 2, listEntrances.get(i),this, mUI, poolParking);
+                Entrance entrance = new Entrance(i,5, 2, listEntrances.get(i),this, mUI, poolParking, writeLock, readLock);
                 listEntrancesCallable.add(entrance);
             }
     }
