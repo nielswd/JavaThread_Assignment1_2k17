@@ -3,58 +3,48 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Created by iNfecteD on 23/03/2017.
+ * Created by nielswd on 23/03/2017.
  */
 public class ParkingManagement implements Callable<Integer> {
     private int maxSlot;
-    private int maxCar;
     private boolean fairness;
-    private BlockingQueue<Car> mParkingQueue;
-
     private int nbEntranceExit;
-
-    private GuiRunnable mUI;
-
-    private List<Entrance> listEntrancesCallable = new ArrayList<Entrance>();
-
-
-    private List<Exit> listExitCallable = new ArrayList<Exit>();
-
     private int queueSize;
 
+    private UIDesign mUI;
+
+    private List<Entrance> listEntrancesCallable    = new ArrayList<Entrance>();
+    private List<Exit> listExitCallable             = new ArrayList<Exit>();
+
+    private BlockingQueue<Car> mParkingQueue;
 
     /**
      * List of entrances, to let cars keep a track of their position
      */
     private List<ArrayBlockingQueue<Car>> listEntrances = new ArrayList<>();
 
-
-
     /**
      * List of exits, to let cars keep a track of their position
      */
-    private List<ArrayBlockingQueue<Car>> listExits = new ArrayList<>();
+    private List<ArrayBlockingQueue<Car>> listExits     = new ArrayList<>();
 
-    //private Semaphore mParkingSlot;
+
+    private List<Integer> poolParking                   = new ArrayList<>();
 
     /**
      * ThreadPool entrances.
      */
     private ExecutorService mExecutorEntrances;
 
-
-    private List<Integer> poolParking = new ArrayList<>();
-
     /**
      * ThreadPool exits.
      */
     private ExecutorService mExecutorExits;
 
-    ParkingManagement(int maxSlot, int maxCar, int nbEntrance, int nbExit, boolean fairness, GuiRunnable mUI, int queueSize){
+    ParkingManagement(int maxSlot, int nbEntranceExit, boolean fairness, UIDesign mUI, int queueSize){
         this.maxSlot            = maxSlot;
-        this.maxCar             = maxCar;
         this.fairness           = fairness;
-        this.nbEntranceExit     = nbEntrance;
+        this.nbEntranceExit     = nbEntranceExit;
         this.mUI                = mUI;
         this.queueSize          = queueSize;
 
@@ -91,7 +81,7 @@ public class ParkingManagement implements Callable<Integer> {
 
     private void createEntrances() {
             for(int i = 0;i < nbEntranceExit;i++){
-                Entrance entrance = new Entrance(i, queueSize, 5, 2, fairness, listEntrances.get(i), this, mUI, poolParking);
+                Entrance entrance = new Entrance(i,5, 2, listEntrances.get(i),this, mUI, poolParking);
                 listEntrancesCallable.add(entrance);
             }
     }
@@ -131,7 +121,7 @@ public class ParkingManagement implements Callable<Integer> {
         }
     }
 
-    boolean tryLeaveParking(Car currentCar, int id, boolean isABadCarParkerAKA4x4People) throws  InterruptedException{
+    boolean tryLeaveParking(Car currentCar, boolean isABadCarParkerAKA4x4People) throws  InterruptedException{
         if (isABadCarParkerAKA4x4People){
             mParkingQueue.remove(currentCar);
             mParkingQueue.remove(currentCar);
@@ -140,9 +130,6 @@ public class ParkingManagement implements Callable<Integer> {
             return mParkingQueue.remove(currentCar);
         }
     }
-
-
-
 
     @Override
     public Integer call() throws Exception {
@@ -160,8 +147,8 @@ public class ParkingManagement implements Callable<Integer> {
         List<Future<Integer>> entrancesState = new ArrayList<>();
         List<Future<Integer>> exitsState = new ArrayList<>();
 
-        Integer resEntrance = null;
-        Integer resExit = null;
+        Integer resEntrance;
+        Integer resExit;
         try {
             for(Callable<Integer> t : listEntrances){
                 entrancesState.add(completionServiceEntrance.submit(t));
@@ -170,15 +157,18 @@ public class ParkingManagement implements Callable<Integer> {
                 exitsState.add(completionServiceExit.submit(f));
             }
 
-//            if (listEntrances.size() != listExits.size()){
-//                System.out.println("Different number of entrances and exits, interrupting here");
-//                return;
-//            }
             for (int i = 0; i < listEntrances.size(); ++i) {
 
                 try {
                     resEntrance = completionServiceEntrance.take().get();
                     resExit = completionServiceEntrance.take().get();
+                    if (resEntrance != null) {
+                        System.out.println("Entrances closed");
+                    }
+                    if (resExit != null) {
+                        System.out.println("Exits closed" + resEntrance);
+                        System.out.println("All threads interrupted, simulation finished");
+                    }
                 }
                 catch(ExecutionException ignore) {}
             }
@@ -196,26 +186,24 @@ public class ParkingManagement implements Callable<Integer> {
         return listEntrancesCallable;
     }
 
-    public void setListEntrancesCallable(List<Entrance> listEntrancesCallable) {
-        this.listEntrancesCallable = listEntrancesCallable;
-    }
-
-    public List<Exit> getListExitCallable() {
+    List<Exit> getListExitCallable() {
         return listExitCallable;
     }
 
-    public void setListExitCallable(List<Exit> listExitCallable) {
-        this.listExitCallable = listExitCallable;
+
+
+    void setDayIsOverForEntrance(){
+        for(Entrance entrance : listEntrancesCallable){
+            entrance.setDayIsOver(true);
+        }
     }
 
-
-    void setDayIsOver(){
+    void setDayIsOverForExit(){
         for(Entrance entrance : listEntrancesCallable){
             entrance.setDayIsOver(true);
         }
         for(Exit exit : listExitCallable){
             exit.setDayIsOver(true);
         }
-        Thread.currentThread().interrupt();
     }
 }

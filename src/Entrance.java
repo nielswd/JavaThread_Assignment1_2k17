@@ -9,82 +9,51 @@ import java.util.concurrent.Callable;
 
 
     private int id;
-    private int queueSize;
     private int moneyReceived = 0;
     private int priceStudent = 4;
     private int priceTeacher = 2;
 
 
+
     private boolean dayIsOver = false;
-    private boolean isFair = true;
 
     private Car lastCar = null;
-    private boolean isFirstCar = true;
-    private GuiRunnable mUI;
+    private UIDesign mUI;
 
     private BlockingQueue<Car> entranceQueue;
     private ParkingManagement parking;
 
     private List<Integer> poolParking;
 
+    private int totalParkedCar = 0;
+
     private String[] data = {"Entrance 1", "1000", "1000", "0.00€", "0", "0"};
 
-    public Entrance(int id, int queue_size, int priceStudent, int priceTeacher, boolean isFair, BlockingQueue<Car> entranceQueue, ParkingManagement parking, GuiRunnable mUI,
+    Entrance(int id, int priceStudent, int priceTeacher, BlockingQueue<Car> entranceQueue, ParkingManagement parking, UIDesign mUI,
                         List<Integer> poolParking) {
         this.id             = id;
-        this.queueSize      = queue_size;
         this.priceStudent   = priceStudent;
         this.priceTeacher   = priceTeacher;
-        this.isFair         = isFair;
         this.entranceQueue  = entranceQueue;
         this.parking        = parking;
         this.mUI            = mUI;
         this.poolParking    = poolParking;
     }
 
-    public boolean isDayOver() {
-        return dayIsOver;
+    BlockingQueue<Car> getEntranceQueue() {
+        return entranceQueue;
+    }
+
+    private void addMoney(int amount){
+        this.moneyReceived += amount;
+    }
+
+    public int getTotalParkedCar() {
+        return totalParkedCar;
     }
 
     public void setDayIsOver(boolean dayIsOver) {
         this.dayIsOver = dayIsOver;
-    }
-
-    public BlockingQueue<Car> getEntranceQueue() {
-        return entranceQueue;
-    }
-
-    public void setEntranceQueue(BlockingQueue<Car> entranceQueue) {
-        this.entranceQueue = entranceQueue;
-    }
-
-    private void onCarArrived(boolean isAStudent) {
-
-    }
-
-    private void onCarLeave(boolean isAStudent) {
-
-        payEntrance(isAStudent);
-    }
-
-    private void payEntrance(boolean isAStudent) {
-        if (isAStudent) {
-            moneyReceived += priceStudent;
-        } else {
-            moneyReceived += priceTeacher;
-        }
-    }
-
-    public int getMoneyReceived() {
-        return moneyReceived;
-    }
-
-    public void setMoneyReceived(int moneyReceived) {
-        this.moneyReceived = moneyReceived;
-    }
-
-    public void addMoney(int amount){
-        this.moneyReceived += amount;
     }
 
     @Override
@@ -92,8 +61,7 @@ import java.util.concurrent.Callable;
         System.out.println("Entrance " + Integer.toString(id) + " created. Total capacity: " + Integer.toString(entranceQueue.remainingCapacity()));
         data[0] = "Entrance " + Integer.toString(id + 1);
         data[1] = Integer.toString(entranceQueue.remainingCapacity());
-        manageEntrance();
-        return 0;
+        return manageEntrance();
     }
 
     private int manageEntrance() {
@@ -104,79 +72,34 @@ import java.util.concurrent.Callable;
                     lastCar = car;
                     try {
                         Thread.sleep(car.getrandomProblemFactor() * 10);
-                        boolean isAbleToPark;
-                        if (car.isABadCarParkerAKA4x4People()){
-                            isAbleToPark = parking.tryAcquireParkingSlot(car, true);
-                        } else {
-                            isAbleToPark = parking.tryAcquireParkingSlot(car, false);
-                        }
+                        boolean isAbleToPark = tryAcquireParkingSlot(car);
 
                         if (isAbleToPark && !car.isABadCarParkerAKA4x4People()) {
-                            int availableSlotPos = poolParking.lastIndexOf(0);
-                            poolParking.set(availableSlotPos, 1);
-                            car.setLocationInParking(availableSlotPos);
-                            if (car.getDriver().equals("teacher")){
-                                addMoney(priceTeacher);
-                                mUI.updateParkingSlot(availableSlotPos, false, false);
-                            } else {
-                                addMoney(priceStudent);
-                                mUI.updateParkingSlot(availableSlotPos, true, false);
-                            }
-                            updateUIEntranceData();
-                            car.setStillLooking(false);
-                            entranceQueue.poll();
-                            System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+                            parkCurrentCar(car);
+                            totalParkedCar += 1;
                         } else if (isAbleToPark && car.isABadCarParkerAKA4x4People()) {
-
-                            boolean nextSlotPos =false;
-                            boolean previousSlotPos = false;
-                            int availableSlotPos = poolParking.lastIndexOf(0);
-                            int moreAvailableSlotPos = 0;
-                            if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
-                                nextSlotPos =true;
-                                moreAvailableSlotPos = availableSlotPos + 1;
-                                poolParking.set(availableSlotPos, 1);
-                                poolParking.set(availableSlotPos + 1, 1);
-                                car.setLocationInParking(availableSlotPos);
-                                car.setMorePositionInParking(availableSlotPos + 1);
-                            } else if ((availableSlotPos - 1) < poolParking.size() && poolParking.get(availableSlotPos - 1) == 0){
-                                previousSlotPos = true;
-                                moreAvailableSlotPos = availableSlotPos  - 1;
-                                poolParking.set(availableSlotPos, 1);
-                                poolParking.set(availableSlotPos - 1, 1);
-                                car.setLocationInParking(availableSlotPos);
-                                car.setMorePositionInParking(availableSlotPos - 1);
-                            }
-                            if (car.getDriver().equals("teacher")){
-                                addMoney(priceTeacher);
-                                mUI.updateParkingSlot(availableSlotPos, false, true);
-                                mUI.updateParkingSlot(moreAvailableSlotPos, false, true);
-                            } else {
-                                addMoney(priceStudent);
-                                mUI.updateParkingSlot(availableSlotPos, true, true);
-                                mUI.updateParkingSlot(moreAvailableSlotPos, true, true);
-                            }
-                            updateUIEntranceData();
-                            car.setStillLooking(false);
-                            entranceQueue.poll();
-                            System.out.println("Driver " + Integer.toString(car.getId()) + " (" +  car.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+                            help4x4DriverToPark(car);
+                            totalParkedCar += 1;
                         } else {
                             car.nextQueue();
                         }
                     } catch (InterruptedException interrupted1) {
                         interrupted1.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
-                } else {
-
                 }
             }
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e){
-                e.printStackTrace();
-            }
+            sleepToSaveCPU();
         }
         return 0;
+    }
+
+    private void sleepToSaveCPU() {
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
     }
 
     private void updateUIEntranceData(){
@@ -185,5 +108,87 @@ import java.util.concurrent.Callable;
             data[4] = "Not implemented";
             data[5] = "Not implemented";
             mUI.updateTableEntrance(id, data);
+    }
+
+    private boolean tryAcquireParkingSlot(Car currentCar){
+        boolean isAbleToPark;
+        try {
+            if (currentCar.isABadCarParkerAKA4x4People()) {
+                isAbleToPark = parking.tryAcquireParkingSlot(currentCar, true);
+            } else {
+                isAbleToPark = parking.tryAcquireParkingSlot(currentCar, false);
+            }
+        } catch (InterruptedException acquiringInterrupted){
+            isAbleToPark = false;
+            Thread.currentThread().interrupt();
+        }
+        return isAbleToPark;
+    }
+
+    private void parkCurrentCar(Car currentCar){
+        totalParkedCar += 1;
+
+        int availableSlotPos = poolParking.lastIndexOf(0);
+        poolParking.set(availableSlotPos, 1);
+        currentCar.setLocationInParking(availableSlotPos);
+
+        updateParkingSlotAndAddMoney(currentCar, availableSlotPos);
+        updateUIEntranceData();
+
+        currentCar.setStillLooking(false);
+        entranceQueue.poll();
+
+        System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") managed to park via Entrance " + Integer.toString(id));
+    }
+
+    private void help4x4DriverToPark(Car current4x4Driver){
+        totalParkedCar += 1;
+
+        int availableSlotPos = poolParking.lastIndexOf(0);
+        int moreAvailableSlotPos = 0;
+
+        if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
+            moreAvailableSlotPos = availableSlotPos + 1;
+            poolParking.set(availableSlotPos, 1);
+            poolParking.set(availableSlotPos + 1, 1);
+            current4x4Driver.setLocationInParking(availableSlotPos);
+            current4x4Driver.setMorePositionInParking(availableSlotPos + 1);
+        } else if ((availableSlotPos - 1) < poolParking.size() && poolParking.get(availableSlotPos - 1) == 0){
+            moreAvailableSlotPos = availableSlotPos  - 1;
+            poolParking.set(availableSlotPos, 1);
+            poolParking.set(availableSlotPos - 1, 1);
+            current4x4Driver.setLocationInParking(availableSlotPos);
+            current4x4Driver.setMorePositionInParking(availableSlotPos - 1);
+        }
+
+        updateParkingSlotAndAddMoney4x4(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
+        updateUIEntranceData();
+
+        current4x4Driver.setStillLooking(false);
+        entranceQueue.poll();
+
+        System.out.println("Driver " + Integer.toString(current4x4Driver.getId()) + " (" +  current4x4Driver.getDriver() +") finally managed to park via Entrance " + Integer.toString(id));
+    }
+
+    private void updateParkingSlotAndAddMoney4x4(Car currentCar, int availableSlotPos, int moreAvailableSlotPos){
+        if (currentCar.getDriver().equals("teacher")){
+            addMoney(priceTeacher);
+            mUI.updateParkingSlot(availableSlotPos, false, true);
+            mUI.updateParkingSlot(moreAvailableSlotPos, false, true);
+        } else {
+            addMoney(priceStudent);
+            mUI.updateParkingSlot(availableSlotPos, true, true);
+            mUI.updateParkingSlot(moreAvailableSlotPos, true, true);
+        }
+    }
+
+    private void updateParkingSlotAndAddMoney(Car currentCar, int availableSlotPos){
+        if (currentCar.getDriver().equals("teacher")){
+            addMoney(priceTeacher);
+            mUI.updateParkingSlot(availableSlotPos, false, true);
+        } else {
+            addMoney(priceStudent);
+            mUI.updateParkingSlot(availableSlotPos, true, true);
+        }
     }
 }

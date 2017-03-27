@@ -13,7 +13,7 @@ public class Exit implements Callable<Integer> {
     private int moneyReceived;
     private int priceStudent;
     private int priceTeacher;
-    private GuiRunnable mUI;
+    private UIDesign mUI;
     private Car lastCar;
 
 
@@ -25,7 +25,10 @@ public class Exit implements Callable<Integer> {
     private BlockingQueue<Car> exitQueue;
     private ParkingManagement parking;
 
-    public Exit(int id, int queue_size, boolean isFair, BlockingQueue<Car> exitQueue, ParkingManagement parking, GuiRunnable mUI, List<Integer> poolParking){
+    private int maxCar = 0;
+    private int totalParkedCar = 0;
+
+    public Exit(int id, int queue_size, boolean isFair, BlockingQueue<Car> exitQueue, ParkingManagement parking, UIDesign mUI, List<Integer> poolParking){
         this.id = id;
         this.queueSize = queue_size;
         this.isFair = isFair;
@@ -33,6 +36,8 @@ public class Exit implements Callable<Integer> {
         this.parking = parking;
         this.mUI = mUI;
         this.poolParking = poolParking;
+        this.totalParkedCar = totalParkedCar;
+        this.maxCar         = maxCar;
     }
 
     public boolean isDayOver() {
@@ -74,13 +79,15 @@ public class Exit implements Callable<Integer> {
                     try {
                         Thread.sleep(car.getrandomProblemFactor() * 10);
                         if (!car.isABadCarParkerAKA4x4People()) {
-                            parking.tryLeaveParking(car, id, false);
+                            totalParkedCar += 1;
+                            parking.tryLeaveParking(car,false);
                             car.setTryingToLeave(false);
                             exitQueue.poll();
                             mUI.restoreParkingSlot(car.getLocationInParking());
                             poolParking.set(car.getLocationInParking(), 0);
                         } else {
-                            parking.tryLeaveParking(car, id, true);
+                            totalParkedCar += 1;
+                            parking.tryLeaveParking(car,true);
                             car.setTryingToLeave(false);
                             exitQueue.poll();
                             mUI.restoreParkingSlot(car.getLocationInParking());

@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 /**
  * Created by iNfecteD on 22/03/2017.
  */
-public class MainProg implements  Runnable{
+public class CarParkManagement implements  Runnable{
 
     private int maxCar = 2000;
     private  int maxSlot = 1000;
@@ -30,12 +30,12 @@ public class MainProg implements  Runnable{
     private ParkingManagement mParkingManagement;
 
 
-    private GuiRunnable mUI;
+    private UIDesign mUI;
 
     private ExecutorService parkingExecutor;
 
 
-    public MainProg(GuiRunnable ui, int maxCar, int maxSlot, int queueSize, boolean isFair, int nbEntranceExit){
+    public CarParkManagement(UIDesign ui, int maxCar, int maxSlot, int queueSize, boolean isFair, int nbEntranceExit){
         this.mUI = ui;
         this.maxCar = maxCar;
         this.maxSlot = maxSlot;
@@ -65,7 +65,7 @@ public class MainProg implements  Runnable{
     }
 
     private void initParking() {
-        this.mParkingManagement = new ParkingManagement(maxSlot, maxCar, nbEntranceExit, nbEntranceExit, isFair, mUI, queueSize);
+        this.mParkingManagement = new ParkingManagement(maxSlot, nbEntranceExit, isFair, mUI, queueSize);
         parkingExecutor = Executors.newFixedThreadPool(1);
         parkingExecutor.submit(mParkingManagement);
     }
@@ -91,10 +91,10 @@ public class MainProg implements  Runnable{
            int durationStay = rn.nextInt(100) + 1;
            int randomlyAssignedEntrance = rn.nextInt(nbEntranceExit);
            boolean isABadCarParkerAKA4x4People = false;
-           if (randomFactorProblem == 9 ||randomFactorProblem == 3) {
+           if (randomFactorProblem == 9) {
                isABadCarParkerAKA4x4People = true;
            }
-            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
             listCars.add(teacherCar);
         }
     }
@@ -109,7 +109,7 @@ public class MainProg implements  Runnable{
             if (randomFactorProblem == 9) {
                 isABadCarParkerAKA4x4People = true;
             }
-            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, mUI, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
             listCars.add(studentCar);
         }
     }
@@ -152,11 +152,12 @@ public class MainProg implements  Runnable{
                 try {
                     res = completionService.take().get();
                     if (res != null) {
-                       System.out.println(res);
                        done += 1;
+                        System.out.println(done);
                        if (done == maxCar){
-                           parkingManagement.setDayIsOver();
-                           Thread.currentThread().interrupt();
+                           parkingManagement.setDayIsOverForEntrance();
+                           parkingManagement.setDayIsOverForExit();
+                           mExecutor.shutdown();
                        }
 
                     }
@@ -176,4 +177,8 @@ public class MainProg implements  Runnable{
         setup();
     }
 
+
+    public void dayIsOverForManagementTeam(){
+
+    }
 }
