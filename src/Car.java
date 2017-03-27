@@ -20,6 +20,7 @@ public class Car implements Callable<Integer> {
     private String driver;
     private int randomProblemFactor;
     private int durationStay;
+    private boolean useQueue;
 
     private ParkingManagement parking;
 
@@ -33,7 +34,7 @@ public class Car implements Callable<Integer> {
 
     private boolean isABadCarParkerAKA4x4People = false;
 
-    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, int randomlyAssignedEntrance, boolean isABadCarParkerAKA4x4People){
+    Car(int id, String driver, int randomProblemFactor, int durationStay, ParkingManagement parking, int randomlyAssignedEntrance, boolean isABadCarParkerAKA4x4People, boolean useQueue){
         this.driver                         = driver;
         this.randomProblemFactor            = randomProblemFactor;
         this.durationStay                   = durationStay;
@@ -41,6 +42,7 @@ public class Car implements Callable<Integer> {
         this.id                             = id;
         this.carLocation                    = randomlyAssignedEntrance;
         this.isABadCarParkerAKA4x4People    = isABadCarParkerAKA4x4People;
+        this.useQueue                       = useQueue;
 
     }
 
@@ -85,19 +87,30 @@ public class Car implements Callable<Integer> {
             if (inQueue) {
                 sleepToSaveCPUDuringQueue();
             } else {
-                try {
+                if (!useQueue) {
                     Entrance entrance = parking.getListEntrancesCallable().get(carLocation);
-
-                    boolean gotSpot = entrance.getEntranceQueue().offer(this, 100, TimeUnit.MILLISECONDS);
-
+                    boolean gotSpot = entrance.carTryToFindSpotAlone(this);
                     actionAfterAskingForEntrance(gotSpot);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                } else {
+                    carParkUseQueue();
                 }
+
                 sleepToSaveCPUDuringQueue();
             }
         }
         return goToLecture();
+    }
+
+    private void carParkUseQueue(){
+        try {
+        Entrance entrance = parking.getListEntrancesCallable().get(carLocation);
+
+        boolean gotSpot = entrance.getEntranceQueue().offer(this, 100, TimeUnit.MILLISECONDS);
+
+        actionAfterAskingForEntrance(gotSpot);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void actionAfterAskingForEntrance(boolean gotSpot){
@@ -175,7 +188,7 @@ public class Car implements Callable<Integer> {
 
     void nextQueue(){
         inQueue = false;
-        int nbEntrances = parking.getListExitCallable().size();
+        int nbEntrances = parking.getListEntrancesCallable().size();
         if (carLocation < nbEntrances - 1) {
             carLocation++;
             findQueue();

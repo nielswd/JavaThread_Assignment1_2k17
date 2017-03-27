@@ -121,7 +121,7 @@ public class UIDesign implements Runnable {
         JLabel labelSpeed = initQueueSizeChooser();
         JLabel labelEntranceExit = initEntranceExitChooser();
 
-        setFair = new JCheckBox("Fair access", true);
+        setFair = new JCheckBox("Use queue for Entrance/Exit", true);
 
         resetValues = new JButton("Reset Values");
         stopSimulation = new JButton("Stop Simulation");

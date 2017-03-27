@@ -110,7 +110,7 @@ import java.util.concurrent.Callable;
             mUI.updateTableEntrance(id, data);
     }
 
-    private boolean tryAcquireParkingSlot(Car currentCar){
+    public boolean tryAcquireParkingSlot(Car currentCar){
         boolean isAbleToPark;
         try {
             if (currentCar.isABadCarParkerAKA4x4People()) {
@@ -125,10 +125,39 @@ import java.util.concurrent.Callable;
         return isAbleToPark;
     }
 
+    boolean carTryToFindSpotAlone(Car currentCar){
+        if (currentCar != lastCar) {
+            lastCar = currentCar;
+            boolean isAbleToPark = false;
+            try {
+                Thread.sleep(currentCar.getrandomProblemFactor() * 50);
+                isAbleToPark = tryAcquireParkingSlot(currentCar);
+
+                if (isAbleToPark && !currentCar.isABadCarParkerAKA4x4People()) {
+                    parkCurrentCar(currentCar);
+                    totalParkedCar += 1;
+                } else if (isAbleToPark && currentCar.isABadCarParkerAKA4x4People()) {
+                    help4x4DriverToPark(currentCar);
+                    totalParkedCar += 1;
+                } else {
+                    currentCar.nextQueue();
+                }
+            } catch (InterruptedException interrupted1) {
+                interrupted1.printStackTrace();
+                Thread.currentThread().interrupt();
+            }
+            return isAbleToPark;
+        }
+        return false;
+    }
+
     private void parkCurrentCar(Car currentCar){
         totalParkedCar += 1;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
+        if (availableSlotPos == -1){
+            System.out.println("-1 bitch...");
+        }
         poolParking.set(availableSlotPos, 1);
         currentCar.setLocationInParking(availableSlotPos);
 
@@ -146,7 +175,9 @@ import java.util.concurrent.Callable;
 
         int availableSlotPos = poolParking.lastIndexOf(0);
         int moreAvailableSlotPos = 0;
-
+        if (availableSlotPos == -1){
+            System.out.println("-1 bitch...4x4");
+        }
         if ((availableSlotPos + 1) < poolParking.size() && poolParking.get(availableSlotPos + 1) == 0){
             moreAvailableSlotPos = availableSlotPos + 1;
             poolParking.set(availableSlotPos, 1);

@@ -16,6 +16,8 @@ public class ParkingManagement implements Callable<Integer> {
     private List<Entrance> listEntrancesCallable    = new ArrayList<Entrance>();
     private List<Exit> listExitCallable             = new ArrayList<Exit>();
 
+
+
     private BlockingQueue<Car> mParkingQueue;
 
     /**
@@ -119,6 +121,10 @@ public class ParkingManagement implements Callable<Integer> {
         } else {
             return mParkingQueue.offer(currentCar, 0, TimeUnit.MILLISECONDS);
         }
+    }
+
+    public BlockingQueue<Car> getParkingQueue() {
+        return mParkingQueue;
     }
 
     boolean tryLeaveParking(Car currentCar, boolean isABadCarParkerAKA4x4People) throws  InterruptedException{

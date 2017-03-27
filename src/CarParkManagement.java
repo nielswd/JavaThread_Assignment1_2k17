@@ -94,7 +94,7 @@ public class CarParkManagement implements  Runnable{
            if (randomFactorProblem == 9) {
                isABadCarParkerAKA4x4People = true;
            }
-            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
+            Car teacherCar = new Car(i,"teacher", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair);
             listCars.add(teacherCar);
         }
     }
@@ -109,7 +109,7 @@ public class CarParkManagement implements  Runnable{
             if (randomFactorProblem == 9) {
                 isABadCarParkerAKA4x4People = true;
             }
-            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People);
+            Car studentCar = new Car(i,"student", randomFactorProblem, durationStay, mParkingManagement, randomlyAssignedEntrance, isABadCarParkerAKA4x4People, isFair);
             listCars.add(studentCar);
         }
     }
