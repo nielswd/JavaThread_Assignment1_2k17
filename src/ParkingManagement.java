@@ -139,7 +139,7 @@ public class ParkingManagement implements Callable<Integer> {
     }
 
 
-    private static void launchEntrancesAndExits(final ExecutorService executorEntrance, final ExecutorService executorExit, List<Entrance> listEntrances, List<Exit> listExits){
+    private void launchEntrancesAndExits(final ExecutorService executorEntrance, final ExecutorService executorExit, List<Entrance> listEntrances, List<Exit> listExits){
 
         CompletionService<Integer> completionServiceEntrance = new ExecutorCompletionService<>(executorEntrance);
         CompletionService<Integer> completionServiceExit = new ExecutorCompletionService<>(executorExit);
@@ -168,6 +168,7 @@ public class ParkingManagement implements Callable<Integer> {
                     if (resExit != null) {
                         System.out.println("Exits closed" + resEntrance);
                         System.out.println("All threads interrupted, simulation finished");
+                        mUI.createParkingDisplay(false);
                     }
                 }
                 catch(ExecutionException ignore) {}

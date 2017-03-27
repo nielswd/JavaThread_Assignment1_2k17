@@ -133,11 +133,11 @@ import java.util.concurrent.Callable;
         currentCar.setLocationInParking(availableSlotPos);
 
         updateParkingSlotAndAddMoney(currentCar, availableSlotPos);
-        updateUIEntranceData();
+
 
         currentCar.setStillLooking(false);
         entranceQueue.poll();
-
+        updateUIEntranceData();
         System.out.println("Driver " + Integer.toString(currentCar.getId()) + " (" +  currentCar.getDriver() +") managed to park via Entrance " + Integer.toString(id));
     }
 
@@ -162,11 +162,11 @@ import java.util.concurrent.Callable;
         }
 
         updateParkingSlotAndAddMoney4x4(current4x4Driver, availableSlotPos, moreAvailableSlotPos);
-        updateUIEntranceData();
+
 
         current4x4Driver.setStillLooking(false);
         entranceQueue.poll();
-
+        updateUIEntranceData();
         System.out.println("Driver " + Integer.toString(current4x4Driver.getId()) + " (" +  current4x4Driver.getDriver() +") finally managed to park via Entrance " + Integer.toString(id));
     }
 
@@ -185,10 +185,10 @@ import java.util.concurrent.Callable;
     private void updateParkingSlotAndAddMoney(Car currentCar, int availableSlotPos){
         if (currentCar.getDriver().equals("teacher")){
             addMoney(priceTeacher);
-            mUI.updateParkingSlot(availableSlotPos, false, true);
+            mUI.updateParkingSlot(availableSlotPos, false, false);
         } else {
             addMoney(priceStudent);
-            mUI.updateParkingSlot(availableSlotPos, true, true);
+            mUI.updateParkingSlot(availableSlotPos, true, false);
         }
     }
 }

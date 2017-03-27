@@ -22,7 +22,7 @@ public class UIDesign implements Runnable {
      * Simulations values, needed if user change values
      */
     private int     maxCar          = 2000;
-    private  int    maxSlot        = 1000;
+    private  int    maxSlot         = 1000;
     private int     queueSize       = 1;
     private boolean isFair          = true;
     private int     nbEntranceExit  = 3;
@@ -52,6 +52,8 @@ public class UIDesign implements Runnable {
     private JPanel              printDynamic;
 
     private JPanel              printEntranceExit;
+
+    private JSplitPane          splitPane;
 
     private JPanel              parkingDisplay;
 
@@ -165,8 +167,8 @@ public class UIDesign implements Runnable {
     //TODO Remove uncheck warning. Quick fix : supresswarning
     @SuppressWarnings("unchecked")
     private JLabel initSlotChooser(){
-        String[] availableSlots = new String[10];
-        for (int i = 0; i < 10; i++){
+        String[] availableSlots = new String[2];
+        for (int i = 0; i < 2; i++){
             availableSlots[i] = Integer.toString(500 * (i + 1));
         }
 
@@ -341,22 +343,27 @@ public class UIDesign implements Runnable {
         tableScroll.setPreferredSize(
                 new Dimension(tablePreferred.width, tablePreferred.height/3) );
 
-        parkingDisplay = new JPanel(new GridLayout(10, 100));
-        parkingDisplay.setBorder(
-                new TitledBorder("Parking Display") );
-        ParkingSlotDisplay[][] cell =  new ParkingSlotDisplay[10][100];
-        for (int v = 0; v < 10; v++)
-            for (int h = 0; h < 100; h++)
-                parkingDisplay.add(cell[v][h] = new ParkingSlotDisplay(v, h, Color.white));
+        createParkingDisplay(true);
 
 
-        JSplitPane splitPane = new JSplitPane(
+        splitPane = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
                 tableScroll,
                 new JScrollPane(parkingDisplay));
         mGui.add( splitPane, BorderLayout.CENTER );
 
         displayFrame();
+    }
+
+    public void createParkingDisplay(boolean init){
+        parkingDisplay = new JPanel(new GridLayout(10, maxSlot/10));
+        parkingDisplay.setBorder(
+                new TitledBorder("Parking Display") );
+        ParkingSlotDisplay[][] cell =  new ParkingSlotDisplay[10][maxSlot/10];
+        for (int v = 0; v < 10; v++)
+            for (int h = 0; h < maxSlot/10; h++)
+                parkingDisplay.add(cell[v][h] = new ParkingSlotDisplay(v, h, Color.white));
+
     }
 
     private void displayFrame() {
